@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:project_prayer/screens/home_screen.dart';
+import 'package:project_prayer/screens/map_page.dart';
 import 'package:project_prayer/screens/signup_screen.dart';
 
 class LoginScreen extends StatefulWidget {
@@ -69,15 +70,16 @@ class _LoginScreenState extends State<LoginScreen> {
 
                     SizedBox(height: 40.0),
                     GestureDetector(
-                      onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => HomeScreen())),
+                      onTap: () {Navigator.push(context, MaterialPageRoute(builder: (_) => MapPage()));
+                      print("hi");},
                       child: Container(
-                        height: 50.0,
-                        child: Material(
-                          borderRadius: BorderRadius.circular(20.0),
-                          shadowColor: Colors.blueAccent,
-                          color: Colors.blue,
-                          elevation: 7.0,
-                          child: Center(
+                      height: 50.0,
+                      child: Material(
+                        borderRadius: BorderRadius.circular(20.0),
+                        shadowColor: Colors.blueAccent,
+                        color: Colors.blue,
+                        elevation: 7.0,
+                        child: Center(
                             child: Text(
                               'LOGIN',
                               style: TextStyle(
