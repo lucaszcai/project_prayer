@@ -153,7 +153,7 @@ class _MapPageState extends State<MapPage> {
 
   void onPrayerTap(LatLng location){
     getLocationPrayers(location);
-
+    _viewMarker();
   }
 
   final addGoalController = TextEditingController();
@@ -283,6 +283,20 @@ class _MapPageState extends State<MapPage> {
                     ),
                     SizedBox(height: 50.0,),
 
+                    Padding(
+                      padding: EdgeInsets.symmetric(horizontal: 50.0),
+                      child: TextField(
+                        keyboardType: TextInputType.multiline,
+                        maxLines: null,
+                        controller: addNoteController,
+                        decoration: InputDecoration(
+                          hintText: 'Prayer Note',
+                        ),
+                      ),
+                    ),
+
+                    SizedBox(height: 50.0,),
+
                     GestureDetector(
                       onTap: _showSelectImageDialog,
                       child: Container(
@@ -329,7 +343,9 @@ class _MapPageState extends State<MapPage> {
                     SizedBox(height: 50.0,),
 
                     GestureDetector(
-                      onTap: (){},
+                      onTap: (){
+
+                      },
                       child: Container(
                         height: 50.0,
                         width: 300.0,
@@ -337,7 +353,9 @@ class _MapPageState extends State<MapPage> {
                           color: Colors.blue,
                           borderRadius: BorderRadius.all(Radius.circular(30.0),)
                         ),
-                        child: Center(child: Text('Pray for this Location', style: TextStyle(fontSize: 20.0, fontWeight: FontWeight.w600),)),
+                        child: Center(child: Text('Pray for this Location',
+                          style: TextStyle(fontSize: 20.0, fontWeight: FontWeight.w600),
+                        )),
                       ),
                     )
                   ],
