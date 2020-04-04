@@ -13,11 +13,13 @@ class MapPage extends StatefulWidget {
 class _MapPageState extends State<MapPage> {
   GoogleMapController mapController;
   Position currentLocation;
+  List<Marker> markers;
   final Firestore _firestore = Firestore.instance;
 
   @override
   void initState() {
     super.initState();
+    markers = new List<Marker>();
     getCurrentLocation();
   }
 
@@ -28,7 +30,7 @@ class _MapPageState extends State<MapPage> {
   void getCurrentLocation() async {
     var status = await Permission.location.status;
 
-    if (status.isUndetermined || status.isRestricted || status.isDenied) {
+    if (status.isUndetermined || status.isDenied) {
       Map<Permission, PermissionStatus> statues =
           await [Permission.location].request();
     }
@@ -42,8 +44,13 @@ class _MapPageState extends State<MapPage> {
           .getCurrentPosition(desiredAccuracy: LocationAccuracy.high);
       setState(() {
         currentLocation = pos;
-      });
+    });
       print(currentLocation);
+      markers.add(
+        new Marker(markerId: MarkerId("Current"),
+        position: LatLng(currentLocation.latitude, currentLocation.longitude),
+        icon: BitmapDescriptor.defaultMarkerWithHue(BitmapDescriptor.hueBlue)),
+      );
     }
   }
 
@@ -73,10 +80,26 @@ class _MapPageState extends State<MapPage> {
           onMapCreated: _onMapCreated,
           initialCameraPosition: CameraPosition(
             target: LatLng(currentLocation.latitude, currentLocation.longitude),
-            zoom: 5,
+            zoom: 12,
           ),
+          onTap: (position) {
+            addMarker(position);
+            },
+          markers: markers.toSet(),
         ),
       );
     }
+  }
+
+  addMarker(LatLng position) {
+    print(position);
+    addPrayertoDB(new Prayer(id:null, note:"hi", datetime:1003, lat:100.100, lng:100.100, goal:45));
+    markers.add(new Marker(
+      markerId: MarkerId(position.hashCode.toString()),
+      position: position,
+    ));
+    setState(() {
+
+    });
   }
 }

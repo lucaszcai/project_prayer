@@ -28,6 +28,7 @@ dependencies:
   permission_handler: ^5.0.0+hotfix.3
   firebase_auth: ^0.15.5+3
   cloud_firestore: ^0.13.4+2
+  curved_navigation_bar: ^0.3.2
 
 dev_dependencies:
   flutter_test:
