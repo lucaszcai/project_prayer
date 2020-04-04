@@ -52,13 +52,26 @@ class _MapPageState extends State<MapPage> {
   void _setUpMap() async {
     _firestore.collection('prayers').getDocuments().then((snapshot) {
       for (DocumentSnapshot ds in snapshot.documents) {
+        double hue = 0;
+        double percent = ds.data["prayed"] / ds.data["goal"];
+        if (percent < 0.33) {
+          hue = BitmapDescriptor.hueRed;
+        }
+        else if (percent < 0.67) {
+          hue = BitmapDescriptor.hueOrange;
+        }
+        else if (percent < 1) {
+          hue = BitmapDescriptor.hueYellow;
+        }
+        else {
+          hue = BitmapDescriptor.hueGreen;
+        }
         setState(() {
           markers.add(
             new Marker(
                 markerId: MarkerId("Current"),
                 position: LatLng(ds.data['lat'], ds.data['lng']),
-                icon: BitmapDescriptor.defaultMarkerWithHue(
-                    BitmapDescriptor.hueRed),
+                icon: BitmapDescriptor.defaultMarkerWithHue(hue),
                 onTap: () {
                   onPrayerTap(LatLng(ds.data['lat'], ds.data['lng']));
                 }),
@@ -259,7 +272,7 @@ class _MapPageState extends State<MapPage> {
                             },
                           ));
                         });
-                        Navigator.pop(context);
+                        Navigator.pop(context, true);
                         setState(() {
 
                         });
@@ -276,7 +289,7 @@ class _MapPageState extends State<MapPage> {
         });
   }
 
-  void _viewMarker(LatLng position){
+  void _viewMarker(LatLng position) {
     showModalBottomSheet(
         context: context,
         isScrollControlled: true,
@@ -393,7 +406,7 @@ class _MapPageState extends State<MapPage> {
 
                     GestureDetector(
                       onTap: (){
-                        addPrayertoDB(new Prayer(id:null, note:name+"|"+addNoteController.text, datetime:DateTime.now().millisecondsSinceEpoch, lat:position.latitude, lng:position.longitude, goal:curprayers[0].goal));
+                        addPrayertoDB(new Prayer(id:null, note:name+"|"+addNoteController.text, datetime:DateTime.now().millisecondsSinceEpoch, lat:position.latitude, lng:position.longitude, goal:curprayers[0].goal, prayed: 1));
                         Navigator.pop(context);
                       },
                       child: Container(
@@ -427,11 +440,6 @@ class _MapPageState extends State<MapPage> {
       );
     } else {
       return Scaffold(
-        floatingActionButton: FloatingActionButton(
-          child: Icon(Icons.add),
-          onPressed: (){
-          },
-        ),
         body: GoogleMap(
           onMapCreated: _onMapCreated,
           initialCameraPosition: CameraPosition(
