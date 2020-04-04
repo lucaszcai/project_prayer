@@ -1,3 +1,5 @@
+import 'dart:html';
+
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
@@ -15,6 +17,7 @@ class _MapPageState extends State<MapPage> {
   Position currentLocation;
   List<Marker> markers;
   final Firestore _firestore = Firestore.instance;
+  List<Prayer> curprayers = [];
 
   @override
   void initState() {
@@ -62,8 +65,11 @@ class _MapPageState extends State<MapPage> {
   void getLocationPrayers(LatLng location){
     _firestore.collection('prayers').getDocuments().then((snapshot){
       for (DocumentSnapshot ds in snapshot.documents)
-        ds.reference.delete();
+        if(ds.data['lat']==location.latitude && ds.data['lng']==location.longitude) {
+          curprayers.add(Prayer.fromMap(ds.data));
+        }
     });
+
   }
 
   @override
