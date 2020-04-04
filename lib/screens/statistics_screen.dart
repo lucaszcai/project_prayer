@@ -14,6 +14,7 @@ class _StatisticsScreenState extends State<StatisticsScreen> {
     return Container(
       child: Column(
         children: <Widget>[
+          SizedBox(height: 15,),
           Text(
             'Statistics',
             style: TextStyle(
@@ -21,19 +22,28 @@ class _StatisticsScreenState extends State<StatisticsScreen> {
               fontWeight: FontWeight.bold,
             ),
           ),
-          SizedBox(height: 30.0,),
-          ListView.builder(
-            itemCount: provinces.length,
-              itemBuilder: (context, index){
-                return Container(
-                  height: 100.0,
-                  child: Row(
-                    children: <Widget>[
-
-                    ],
-                  )
-                );
-              }
+          SizedBox(height: 15.0,),
+          Expanded(
+            child: ListView.builder(
+              itemCount: provinces.length,
+                itemBuilder: (context, index){
+                  return Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 15.0),
+                    child: Container(
+                      height: 75.0,
+                      child: Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        children: <Widget>[
+                          Container(width: 25, child: Center(child: Text('#' +(index+1).toString(), style: TextStyle(fontSize: 20.0, fontWeight: FontWeight.w600),))),
+                          Container(width: 100,child: Center(child: Text(provinces[index], style: TextStyle(fontSize: 20.0, fontWeight: FontWeight.w600),))),
+                          Container(width: 120, child: Center(child: Text('12315 Cases', style: TextStyle(fontSize: 18.0, fontWeight: FontWeight.w400),))),
+                          Container(width: 110, child: Center(child: Text('345 Prayers', style: TextStyle(fontSize: 18.0, fontWeight: FontWeight.w400)))),
+                        ],
+                      )
+                    ),
+                  );
+                }
+            ),
           )
         ],
       )
