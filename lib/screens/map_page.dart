@@ -1,3 +1,4 @@
+
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
@@ -28,8 +29,8 @@ class _MapPageState extends State<MapPage> {
     markers = new List<Marker>();
     placeNameInputController = new TextEditingController();
     cityInputController = new TextEditingController();
-    placeNameInputController.text = 'Street Name';
-    cityInputController.text = 'City, Province';
+    //placeNameInputController.text = 'Street Name';
+    //cityInputController.text = 'City, Province';
     getName();
 
     getCurrentLocation();
@@ -80,6 +81,7 @@ class _MapPageState extends State<MapPage> {
       }
     });
   }
+
 
   void getCurrentLocation() async {
     var status = await Permission.location.status;
@@ -134,6 +136,8 @@ class _MapPageState extends State<MapPage> {
     return _androidDialog();
   }
 
+
+
   _androidDialog() {
     showDialog(
       context: context,
@@ -179,6 +183,7 @@ class _MapPageState extends State<MapPage> {
 
   final addGoalController = TextEditingController();
   final addNoteController = TextEditingController();
+
   void _onAddMarker(LatLng position) {
     showModalBottomSheet(
         context: context,
@@ -193,40 +198,35 @@ class _MapPageState extends State<MapPage> {
                 child: Column(
                   children: <Widget>[
                     SizedBox(
-                      height: 40.0,
+                      height: 30.0,
                     ),
-                    TextField(
-                      controller: placeNameInputController,
-                      style:
-                          TextStyle(fontWeight: FontWeight.bold, fontSize: 40),
-                    ),
-                    TextField(
-                      controller: cityInputController,
-                      style:
-                          TextStyle(fontWeight: FontWeight.w400, fontSize: 20),
-                    ),
-                    SizedBox(
-                      height: 50.0,
-                    ),
-                    GestureDetector(
-                      onTap: _showSelectImageDialog,
-                      child: Container(
-                        height: 150,
-                        width: 150,
-                        color: Colors.grey[300],
-                        child: Icon(
-                          Icons.add_a_photo,
-                          color: Colors.white70,
-                          size: 120.0,
-                        ),
+                    Padding(
+                      padding: const EdgeInsets.symmetric(horizontal: 25.0),
+                      child: TextField(
+                        controller: placeNameInputController,
+                        decoration: InputDecoration(hintText: 'Street Name'),
+                        style:
+                            TextStyle(fontWeight: FontWeight.bold, fontSize: 40),
                       ),
                     ),
+                    SizedBox(height: 10.0,),
+                    Padding(
+                      padding: const EdgeInsets.symmetric(horizontal: 25.0),
+                      child: TextField(
+                        controller: cityInputController,
+                        decoration: InputDecoration(hintText: 'City/Province'),
+                        style:
+                            TextStyle(fontWeight: FontWeight.w400, fontSize: 20),
+                      ),
+                    ),
+
                     SizedBox(
                       height: 50.0,
                     ),
                     Padding(
                       padding: EdgeInsets.symmetric(horizontal: 150.0),
                       child: TextField(
+                        textAlign: TextAlign.center,
                         controller: addGoalController,
                         decoration: InputDecoration(
                           hintText: 'Prayer Goal',
@@ -293,13 +293,13 @@ class _MapPageState extends State<MapPage> {
     showModalBottomSheet(
         context: context,
         isScrollControlled: true,
-        builder: (context){
+        builder: (context) {
           return Padding(
-            padding: const EdgeInsets.only(bottom: 50.0),
+            padding: const EdgeInsets.only(bottom: 20.0),
             child: SingleChildScrollView(
               child: Container(
-                padding:
-                EdgeInsets.only(bottom: MediaQuery.of(context).viewInsets.bottom),
+                padding: EdgeInsets.only(
+                    bottom: MediaQuery.of(context).viewInsets.bottom),
                 child: Column(
                   children: <Widget>[
                     SizedBox(height: 40.0,),
@@ -317,21 +317,7 @@ class _MapPageState extends State<MapPage> {
                           fontSize: 20
                       ),
                     ),
-                    SizedBox(height: 50.0,),
-
-                    Padding(
-                      padding: EdgeInsets.symmetric(horizontal: 50.0),
-                      child: TextField(
-                        keyboardType: TextInputType.multiline,
-                        maxLines: null,
-                        controller: addNoteController,
-                        decoration: InputDecoration(
-                          hintText: 'Prayer Note',
-                        ),
-                      ),
-                    ),
-
-                    SizedBox(height: 50.0,),
+                    SizedBox(height: 20.0,),
 
                     GestureDetector(
                       onTap: _showSelectImageDialog,
@@ -341,20 +327,20 @@ class _MapPageState extends State<MapPage> {
                         color: Colors.grey[300],
                         child: curprayers.length == 0 ? Center(child: Text("No Prayers Yet"),
                         )
-                        : ListView.builder(
+                            : ListView.builder(
                             itemCount: curprayers.length,
                             itemBuilder: (context, index){
                               return(
-                                ListTile(
-                                  title: Text(curprayers[index].note),
-                                )
+                                  ListTile(
+                                    title: Text(curprayers[index].note),
+                                  )
                               );
                             }
                         ),
                       ),
                     ),
 
-                    SizedBox(height: 50.0,),
+                    SizedBox(height: 20.0,),
 
                     Row(
                       mainAxisAlignment: MainAxisAlignment.spaceAround,
@@ -382,13 +368,13 @@ class _MapPageState extends State<MapPage> {
                     SizedBox(height: 10.0,),
 
                     Padding(
-                      padding: const EdgeInsets.all(20.0),
+                      padding: const EdgeInsets.symmetric(horizontal: 20.0),
                       child: Text(
-                        'This is a school that has been impacted by COVID 19, we would appreciate any prayers'
+                          'This is a school that has been impacted by COVID 19, we would appreciate any prayers'
                       ),
                     ),
 
-                    SizedBox(height: 50.0,),
+                    SizedBox(height: 20.0,),
 
                     Padding(
                       padding: EdgeInsets.symmetric(horizontal: 50.0),
@@ -413,8 +399,8 @@ class _MapPageState extends State<MapPage> {
                         height: 50.0,
                         width: 300.0,
                         decoration: BoxDecoration(
-                          color: Colors.blue,
-                          borderRadius: BorderRadius.all(Radius.circular(30.0),)
+                            color: Colors.blue,
+                            borderRadius: BorderRadius.all(Radius.circular(30.0),)
                         ),
                         child: Center(child: Text('Pray for this Location',
                           style: TextStyle(fontSize: 20.0, fontWeight: FontWeight.w600),
@@ -426,8 +412,7 @@ class _MapPageState extends State<MapPage> {
               ),
             ),
           );
-        }
-    );
+        });
   }
 
   @override
