@@ -1,7 +1,9 @@
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:permission_handler/permission_handler.dart';
+import 'package:project_prayer/models/prayer.dart';
 
 class MapPage extends StatefulWidget {
   @override
@@ -11,6 +13,7 @@ class MapPage extends StatefulWidget {
 class _MapPageState extends State<MapPage> {
   GoogleMapController mapController;
   Position currentLocation;
+  final Firestore _firestore = Firestore.instance;
 
   @override
   void initState() {
@@ -42,6 +45,17 @@ class _MapPageState extends State<MapPage> {
       });
       print(currentLocation);
     }
+  }
+
+  void addPrayertoDB(Prayer p){
+    _firestore.collection('calendars').document(widget.user).collection("entries").getDocuments().then((snapshot){
+      //for (DocumentSnapshot ds in snapshot.documents)
+      //  ds.reference.delete();
+
+      CollectionReference v = _firestore.collection('calendars').document(widget.user).collection("entries");
+      v.add(p.toMap());
+
+    });
   }
 
   @override
