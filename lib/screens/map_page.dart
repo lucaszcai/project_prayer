@@ -153,7 +153,7 @@ class _MapPageState extends State<MapPage> {
 
   void onPrayerTap(LatLng location){
     getLocationPrayers(location);
-    _viewMarker();
+    _viewMarker(location);
   }
 
   final addGoalController = TextEditingController();
@@ -253,7 +253,7 @@ class _MapPageState extends State<MapPage> {
     );
   }
 
-  void _viewMarker(){
+  void _viewMarker(LatLng position){
     showModalBottomSheet(
         context: context,
         isScrollControlled: true,
@@ -308,6 +308,7 @@ class _MapPageState extends State<MapPage> {
                     ),
 
                     SizedBox(height: 50.0,),
+
                     Row(
                       mainAxisAlignment: MainAxisAlignment.spaceAround,
                       children: <Widget>[
@@ -342,9 +343,24 @@ class _MapPageState extends State<MapPage> {
 
                     SizedBox(height: 50.0,),
 
+                    Padding(
+                      padding: EdgeInsets.symmetric(horizontal: 50.0),
+                      child: TextField(
+                        keyboardType: TextInputType.multiline,
+                        maxLines: null,
+                        controller: addNoteController,
+                        decoration: InputDecoration(
+                          hintText: 'Prayer Note',
+                        ),
+                      ),
+                    ),
+
+                    SizedBox(height: 50.0,),
+
                     GestureDetector(
                       onTap: (){
-
+                        addPrayertoDB(new Prayer(id:null, note:name+"|"+addNoteController.text, datetime:DateTime.now().millisecondsSinceEpoch, lat:position.latitude, lng:position.longitude, goal:curprayers[0].goal));
+                        Navigator.pop(context);
                       },
                       child: Container(
                         height: 50.0,
@@ -379,7 +395,8 @@ class _MapPageState extends State<MapPage> {
       return Scaffold(
         floatingActionButton: FloatingActionButton(
           child: Icon(Icons.add),
-          onPressed: _viewMarker,
+          onPressed: (){
+          },
         ),
         body: GoogleMap(
           onMapCreated: _onMapCreated,
