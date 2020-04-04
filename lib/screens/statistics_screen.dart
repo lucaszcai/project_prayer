@@ -1,4 +1,8 @@
+import 'dart:convert';
+
 import 'package:flutter/material.dart';
+import 'package:geolocator/geolocator.dart';
+import 'package:http/http.dart' as http;
 
 class StatisticsScreen extends StatefulWidget {
   @override
@@ -6,47 +10,76 @@ class StatisticsScreen extends StatefulWidget {
 }
 
 class _StatisticsScreenState extends State<StatisticsScreen> {
+  List<Case> provinceCases;
 
-  List<String> provinces = ['toronto', 'ottowa', 'katy', 'texas'];
+  @override
+  void initState() {
+    super.initState();
+    provinceCases = new List<Case>();
+    fillCases();
+  }
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      child: Column(
-        children: <Widget>[
-          SizedBox(height: 15,),
-          Text(
-            'Statistics',
-            style: TextStyle(
-              fontSize: 40.0,
-              fontWeight: FontWeight.bold,
-            ),
-          ),
-          SizedBox(height: 15.0,),
-          Expanded(
-            child: ListView.builder(
-              itemCount: provinces.length,
-                itemBuilder: (context, index){
-                  return Padding(
-                    padding: const EdgeInsets.symmetric(horizontal: 15.0),
-                    child: Container(
-                      height: 75.0,
-                      child: Row(
-                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                        children: <Widget>[
-                          Container(width: 25, child: Center(child: Text('#' +(index+1).toString(), style: TextStyle(fontSize: 20.0, fontWeight: FontWeight.w600),))),
-                          Container(width: 100,child: Center(child: Text(provinces[index], style: TextStyle(fontSize: 20.0, fontWeight: FontWeight.w600),))),
-                          Container(width: 120, child: Center(child: Text('12315 Cases', style: TextStyle(fontSize: 18.0, fontWeight: FontWeight.w400),))),
-                          Container(width: 110, child: Center(child: Text('345 Prayers', style: TextStyle(fontSize: 18.0, fontWeight: FontWeight.w400)))),
-                        ],
-                      )
-                    ),
-                  );
-                }
-            ),
-          )
-        ],
-      )
-    );
+    if (provinceCases.length == 0) {
+      return Scaffold(
+        body: CircularProgressIndicator(),
+      );
+    } else {
+      provinceCases.sort((a, b) => b.cases.compareTo(a.cases));
+      return Scaffold(
+        body: Column(
+          children: <Widget>[
+            SizedBox(height: MediaQuery.of(context).size.height / 20,),
+            Text('Current Statistics', textAlign: TextAlign.center, style: TextStyle(fontSize: 20),),
+            SizedBox(height: MediaQuery.of(context).size.height / 30,),
+            Expanded(
+              child: ListView.builder(
+                  itemCount: provinceCases.length,
+                  itemBuilder: (context, index) {
+                    return (Column(
+                      children: <Widget>[
+                        ListTile(
+                          title: Text(provinceCases[index].province),
+                          subtitle: Text(
+                              'Infected: ${provinceCases[index].cases.toString()}'),
+                          leading: Text('#${index + 1}'),
+                        ),
+                        Divider()
+                      ],
+                    ));
+                  }),
+            )
+          ],
+        )
+      );
+    }
   }
+
+  getPlacemark() async {
+    List<Placemark> list =
+        await Geolocator().placemarkFromCoordinates(56.13, -106.35);
+    print(list[0].administrativeArea);
+  }
+
+  fillCases() async {
+    print('start');
+    var value = await http.get(
+        "https://api.apify.com/v2/key-value-stores/fabbocwKrtxSDf96h/records/LATEST?disableRedirect=true");
+    var allData = json.decode(value.body)['infectedByRegion'];
+    print("LENGTH: " + allData.length.toString());
+    for (int i = 1; i < allData.length - 1; i++) {
+      Case current = new Case(
+          allData[i]['region'], int.parse(allData[i]['infectedCount']));
+      provinceCases.add(current);
+    }
+    setState(() {});
+  }
+}
+
+class Case {
+  String province;
+  int cases;
+
+  Case(this.province, this.cases);
 }
