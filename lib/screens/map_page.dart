@@ -294,37 +294,52 @@ class _MapPageState extends State<MapPage> {
                     ),
 
                     SizedBox(height: 50.0,),
-                    Padding(
-                      padding: EdgeInsets.symmetric(horizontal: 150.0),
-                      child: TextField(
-                        decoration: InputDecoration(
-                          hintText: 'Prayer Goal',
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceAround,
+                      children: <Widget>[
+                        Spacer(),
+                        Text(
+                          '34',
+                          style: TextStyle(
+                            fontSize: 30.0,
+                            fontWeight: FontWeight.bold,
+                          ),
                         ),
-                        keyboardType: TextInputType.numberWithOptions(),
-                      ),
+                        Text(
+                          '/100 prayers',
+                          style: TextStyle(
+                            fontSize: 20.0,
+                            fontWeight: FontWeight.w600,
+                          ),
+                        ),
+                        Spacer()
+                      ],
                     ),
+
 
                     SizedBox(height: 10.0,),
 
                     Padding(
-                      padding: EdgeInsets.symmetric(horizontal: 50.0),
-                      child: TextField(
-                        keyboardType: TextInputType.multiline,
-                        maxLines: null,
-                        decoration: InputDecoration(
-                          hintText: 'Description',
-                        ),
+                      padding: const EdgeInsets.all(20.0),
+                      child: Text(
+                        'This is a school that has been impacted by COVID 19, we would appreciate any prayers'
                       ),
                     ),
 
                     SizedBox(height: 50.0,),
 
-                    IconButton(
-                      onPressed: () => Navigator.pop(context),
-                      icon: Icon(Icons.check),
-                      iconSize: 30.0,
-                      color: Colors.blue,
-                    ),
+                    GestureDetector(
+                      onTap: (){},
+                      child: Container(
+                        height: 50.0,
+                        width: 300.0,
+                        decoration: BoxDecoration(
+                          color: Colors.blue,
+                          borderRadius: BorderRadius.all(Radius.circular(30.0),)
+                        ),
+                        child: Center(child: Text('Pray for this Location', style: TextStyle(fontSize: 20.0, fontWeight: FontWeight.w600),)),
+                      ),
+                    )
                   ],
                 ),
               ),
