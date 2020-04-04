@@ -38,101 +38,103 @@ class _LoginScreenState extends State<LoginScreen> {
   Widget build(BuildContext context) {
     return new Scaffold(
       resizeToAvoidBottomPadding: false,
-      body: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: <Widget>[
-          Container(
-            child: Stack(
-              children: <Widget>[
-                Container(
-                  padding: EdgeInsets.fromLTRB(15.0, 100.0, 0.0, 0.0),
-                  child: Text('Project',
-                      style: TextStyle(
-                          fontSize: 80.0, fontWeight: FontWeight.w300)),
-                ),
-                SizedBox(
-                  height: 10.0,
-                ),
-                Container(
-                  padding: EdgeInsets.fromLTRB(16.0, 165.0, 0.0, 0.0),
-                  child: Text('Prayer',
-                      style: TextStyle(
-                          fontSize: 80.0, fontWeight: FontWeight.bold)),
-                ),
-              ],
+      body: SingleChildScrollView(
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: <Widget>[
+            Container(
+              child: Stack(
+                children: <Widget>[
+                  Container(
+                    padding: EdgeInsets.fromLTRB(15.0, 100.0, 0.0, 0.0),
+                    child: Text('Project',
+                        style: TextStyle(
+                            fontSize: 80.0, fontWeight: FontWeight.w300)),
+                  ),
+                  SizedBox(
+                    height: 10.0,
+                  ),
+                  Container(
+                    padding: EdgeInsets.fromLTRB(16.0, 165.0, 0.0, 0.0),
+                    child: Text('Prayer',
+                        style: TextStyle(
+                            fontSize: 80.0, fontWeight: FontWeight.bold)),
+                  ),
+                ],
+              ),
             ),
-          ),
-          Container(
-              padding: EdgeInsets.only(top: 35.0, left: 20.0, right: 20.0),
-              child: Form(
-                key: _loginFormKey,
-                child: Column(
-                  children: <Widget>[
-                    TextFormField(
-                      controller: emailInputController,
-                      decoration: InputDecoration(
-                          labelText: 'EMAIL',
-                          labelStyle: TextStyle(
-                              fontFamily: 'Montserrat',
-                              fontWeight: FontWeight.bold,
-                              color: Colors.grey),
-                          focusedBorder: UnderlineInputBorder(
-                              borderSide: BorderSide(color: Colors.blue))),
-                      validator: emailValidator,
-                    ),
-                    SizedBox(height: 20.0),
-                    TextFormField(
-                      controller: passwordInputController,
-                      decoration: InputDecoration(
-                          labelText: 'PASSWORD',
-                          labelStyle: TextStyle(
-                              fontFamily: 'Montserrat',
-                              fontWeight: FontWeight.bold,
-                              color: Colors.grey),
-                          focusedBorder: UnderlineInputBorder(
-                              borderSide: BorderSide(color: Colors.blue))),
-                      obscureText: true,
-                    ),
-                    SizedBox(height: 40.0),
-                    GestureDetector(
-                      onTap: () {
-                        if (_loginFormKey.currentState.validate()) {
-                          FirebaseAuth.instance.signInWithEmailAndPassword(email: emailInputController.text, password: passwordInputController.text).then(
-                              (currentUser) {
-                                Firestore.instance.collection('users').document(currentUser.user.uid).get().then(
-                                    (value) {
-                                      Navigator.push(
-                                        context,
-                                        MaterialPageRoute(builder: (context) => HomeScreen()),
-                                      );
-                                    });
-                              }
-                          );
-                        }
-                      },
-                      child: Container(
-                        height: 50.0,
-                        child: Material(
-                          borderRadius: BorderRadius.circular(20.0),
-                          shadowColor: Colors.blueAccent,
-                          color: Colors.blue,
-                          elevation: 7.0,
-                          child: Center(
-                            child: Text(
-                              'LOGIN',
-                              style: TextStyle(
-                                  color: Colors.white,
-                                  fontWeight: FontWeight.bold,
-                                  fontFamily: 'Montserrat'),
+            Container(
+                padding: EdgeInsets.only(top: 35.0, left: 20.0, right: 20.0),
+                child: Form(
+                  key: _loginFormKey,
+                  child: Column(
+                    children: <Widget>[
+                      TextFormField(
+                        controller: emailInputController,
+                        decoration: InputDecoration(
+                            labelText: 'EMAIL',
+                            labelStyle: TextStyle(
+                                fontFamily: 'Montserrat',
+                                fontWeight: FontWeight.bold,
+                                color: Colors.grey),
+                            focusedBorder: UnderlineInputBorder(
+                                borderSide: BorderSide(color: Colors.blue))),
+                        validator: emailValidator,
+                      ),
+                      SizedBox(height: 20.0),
+                      TextFormField(
+                        controller: passwordInputController,
+                        decoration: InputDecoration(
+                            labelText: 'PASSWORD',
+                            labelStyle: TextStyle(
+                                fontFamily: 'Montserrat',
+                                fontWeight: FontWeight.bold,
+                                color: Colors.grey),
+                            focusedBorder: UnderlineInputBorder(
+                                borderSide: BorderSide(color: Colors.blue))),
+                        obscureText: true,
+                      ),
+                      SizedBox(height: 40.0),
+                      GestureDetector(
+                        onTap: () {
+                          if (_loginFormKey.currentState.validate()) {
+                            FirebaseAuth.instance.signInWithEmailAndPassword(email: emailInputController.text, password: passwordInputController.text).then(
+                                    (currentUser) {
+                                  Firestore.instance.collection('users').document(currentUser.user.uid).get().then(
+                                          (value) {
+                                        Navigator.push(
+                                          context,
+                                          MaterialPageRoute(builder: (context) => HomeScreen()),
+                                        );
+                                      });
+                                }
+                            );
+                          }
+                        },
+                        child: Container(
+                          height: 50.0,
+                          child: Material(
+                            borderRadius: BorderRadius.circular(20.0),
+                            shadowColor: Colors.blueAccent,
+                            color: Colors.blue,
+                            elevation: 7.0,
+                            child: Center(
+                              child: Text(
+                                'LOGIN',
+                                style: TextStyle(
+                                    color: Colors.white,
+                                    fontWeight: FontWeight.bold,
+                                    fontFamily: 'Montserrat'),
+                              ),
                             ),
                           ),
                         ),
                       ),
-                    ),
-                  ],
-                ),
-              )),
-        ],
+                    ],
+                  ),
+                )),
+          ],
+        ),
       ),
     );
   }

@@ -19,20 +19,27 @@ class _MapPageState extends State<MapPage> {
   final Firestore _firestore = Firestore.instance;
   List<Prayer> curprayers = [];
   String name = "";
+  TextEditingController placeNameInputController;
+  TextEditingController cityInputController;
 
   @override
   void initState() {
     super.initState();
     markers = new List<Marker>();
+    placeNameInputController = new TextEditingController();
+    cityInputController = new TextEditingController();
+    placeNameInputController.text = 'Street Name';
+    cityInputController.text = 'City, Province';
     getName();
 
     getCurrentLocation();
     _setUpMap();
   }
 
-  void getName() async{
+  void getName() async {
     FirebaseUser user = await FirebaseAuth.instance.currentUser();
-    DocumentSnapshot data = await Firestore.instance.collection('users').document(user.uid).get();
+    DocumentSnapshot data =
+        await Firestore.instance.collection('users').document(user.uid).get();
     setState(() {
       name = data["name"];
     });
@@ -43,23 +50,23 @@ class _MapPageState extends State<MapPage> {
   }
 
   void _setUpMap() async {
-    _firestore.collection('prayers').getDocuments().then((snapshot){
-      for (DocumentSnapshot ds in snapshot.documents){
+    _firestore.collection('prayers').getDocuments().then((snapshot) {
+      for (DocumentSnapshot ds in snapshot.documents) {
         setState(() {
           markers.add(
-            new Marker(markerId: MarkerId("Current"),
+            new Marker(
+                markerId: MarkerId("Current"),
                 position: LatLng(ds.data['lat'], ds.data['lng']),
-                icon: BitmapDescriptor.defaultMarkerWithHue(BitmapDescriptor.hueRed),
-            onTap: (){
-              onPrayerTap(LatLng(ds.data['lat'], ds.data['lng']));
-            }),
-
+                icon: BitmapDescriptor.defaultMarkerWithHue(
+                    BitmapDescriptor.hueRed),
+                onTap: () {
+                  onPrayerTap(LatLng(ds.data['lat'], ds.data['lng']));
+                }),
           );
         });
       }
     });
   }
-
 
   void getCurrentLocation() async {
     var status = await Permission.location.status;
@@ -78,40 +85,41 @@ class _MapPageState extends State<MapPage> {
           .getCurrentPosition(desiredAccuracy: LocationAccuracy.high);
       setState(() {
         currentLocation = pos;
-    });
+      });
       print(currentLocation);
       markers.add(
-        new Marker(markerId: MarkerId("Current"),
-        position: LatLng(currentLocation.latitude, currentLocation.longitude),
-        icon: BitmapDescriptor.defaultMarkerWithHue(BitmapDescriptor.hueBlue)),
+        new Marker(
+            markerId: MarkerId("Current"),
+            position:
+                LatLng(currentLocation.latitude, currentLocation.longitude),
+            icon: BitmapDescriptor.defaultMarkerWithHue(
+                BitmapDescriptor.hueBlue)),
       );
     }
   }
 
   //Database code
 
-  void addPrayertoDB(Prayer prayer){
+  void addPrayertoDB(Prayer prayer) {
     CollectionReference v = _firestore.collection('prayers');
     v.add(prayer.toMap());
   }
 
-  void getLocationPrayers(LatLng location){
-    _firestore.collection('prayers').getDocuments().then((snapshot){
+  void getLocationPrayers(LatLng location) {
+    _firestore.collection('prayers').getDocuments().then((snapshot) {
       for (DocumentSnapshot ds in snapshot.documents)
-        if(ds.data['lat']==location.latitude && ds.data['lng']==location.longitude) {
+        if (ds.data['lat'] == location.latitude &&
+            ds.data['lng'] == location.longitude) {
           curprayers.add(Prayer.fromMap(ds.data));
         }
     });
 
-    print("CURPRAYERS"+curprayers.toString());
-
+    print("CURPRAYERS" + curprayers.toString());
   }
 
   _showSelectImageDialog() {
     return _androidDialog();
   }
-
-
 
   _androidDialog() {
     showDialog(
@@ -151,54 +159,58 @@ class _MapPageState extends State<MapPage> {
     super.dispose();
   }
 
-  void onPrayerTap(LatLng location){
+  void onPrayerTap(LatLng location) {
     getLocationPrayers(location);
     _viewMarker(location);
   }
 
   final addGoalController = TextEditingController();
   final addNoteController = TextEditingController();
-  void _onAddMarker(LatLng position){
+  void _onAddMarker(LatLng position) {
     showModalBottomSheet(
         context: context,
         isScrollControlled: true,
-        builder: (context){
+        builder: (context) {
           return Padding(
             padding: const EdgeInsets.only(bottom: 50.0),
             child: SingleChildScrollView(
               child: Container(
-                padding:
-                EdgeInsets.only(bottom: MediaQuery.of(context).viewInsets.bottom),
+                padding: EdgeInsets.only(
+                    bottom: MediaQuery.of(context).viewInsets.bottom),
                 child: Column(
                   children: <Widget>[
-                    SizedBox(height: 40.0,),
-                    Text(
-                      'La Centerra',
-                      style: TextStyle(
-                        fontWeight: FontWeight.bold,
-                        fontSize: 40
-                      ),
+                    SizedBox(
+                      height: 40.0,
                     ),
-                    Text(
-                      'Katy, Texas',
-                      style: TextStyle(
-                          fontWeight: FontWeight.w400,
-                          fontSize: 20
-                      ),
+                    TextField(
+                      controller: placeNameInputController,
+                      style:
+                          TextStyle(fontWeight: FontWeight.bold, fontSize: 40),
                     ),
-                    SizedBox(height: 50.0,),
-
+                    TextField(
+                      controller: cityInputController,
+                      style:
+                          TextStyle(fontWeight: FontWeight.w400, fontSize: 20),
+                    ),
+                    SizedBox(
+                      height: 50.0,
+                    ),
                     GestureDetector(
                       onTap: _showSelectImageDialog,
                       child: Container(
                         height: 150,
                         width: 150,
                         color: Colors.grey[300],
-                        child: Icon(Icons.add_a_photo, color: Colors.white70, size: 120.0,),
+                        child: Icon(
+                          Icons.add_a_photo,
+                          color: Colors.white70,
+                          size: 120.0,
+                        ),
                       ),
                     ),
-
-                    SizedBox(height: 50.0,),
+                    SizedBox(
+                      height: 50.0,
+                    ),
                     Padding(
                       padding: EdgeInsets.symmetric(horizontal: 150.0),
                       child: TextField(
@@ -209,9 +221,9 @@ class _MapPageState extends State<MapPage> {
                         keyboardType: TextInputType.numberWithOptions(),
                       ),
                     ),
-
-                    SizedBox(height: 10.0,),
-
+                    SizedBox(
+                      height: 10.0,
+                    ),
                     Padding(
                       padding: EdgeInsets.symmetric(horizontal: 50.0),
                       child: TextField(
@@ -223,22 +235,34 @@ class _MapPageState extends State<MapPage> {
                         ),
                       ),
                     ),
-
-                    SizedBox(height: 50.0,),
-
+                    SizedBox(
+                      height: 50.0,
+                    ),
                     IconButton(
-                      onPressed: (){
-                        addPrayertoDB(new Prayer(id:null, note:name+"|"+addNoteController.text, datetime:DateTime.now().millisecondsSinceEpoch, lat:position.latitude, lng:position.longitude, goal:int.parse(addGoalController.text)));
+                      onPressed: () {
+                        addPrayertoDB(new Prayer(
+                          id: null,
+                          note: name + "|" + addNoteController.text,
+                          datetime: DateTime.now().millisecondsSinceEpoch,
+                          lat: position.latitude,
+                          lng: position.longitude,
+                          goal: int.parse(addGoalController.text),
+                          placeName: placeNameInputController.text,
+                          cityName: cityInputController.text,
+                        ));
                         setState(() {
                           markers.add(new Marker(
                             markerId: MarkerId(position.hashCode.toString()),
                             position: position,
-                            onTap:(){
+                            onTap: () {
                               onPrayerTap(position);
                             },
                           ));
                         });
                         Navigator.pop(context);
+                        setState(() {
+
+                        });
                       },
                       icon: Icon(Icons.check),
                       iconSize: 30.0,
@@ -249,8 +273,7 @@ class _MapPageState extends State<MapPage> {
               ),
             ),
           );
-        }
-    );
+        });
   }
 
   void _viewMarker(LatLng position){
@@ -300,10 +323,21 @@ class _MapPageState extends State<MapPage> {
                     GestureDetector(
                       onTap: _showSelectImageDialog,
                       child: Container(
-                        height: 150,
-                        width: 150,
+                        height: 200,
+                        width: 300,
                         color: Colors.grey[300],
-                        child: Icon(Icons.add_a_photo, color: Colors.white70, size: 120.0,),
+                        child: curprayers.length == 0 ? Center(child: Text("No Prayers Yet"),
+                        )
+                        : ListView.builder(
+                            itemCount: curprayers.length,
+                            itemBuilder: (context, index){
+                              return(
+                                ListTile(
+                                  title: Text(curprayers[index].note),
+                                )
+                              );
+                            }
+                        ),
                       ),
                     ),
 
@@ -406,7 +440,7 @@ class _MapPageState extends State<MapPage> {
           ),
           onTap: (position) {
             addMarker(position);
-            },
+          },
           markers: markers.toSet(),
         ),
       );
