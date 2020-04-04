@@ -4,6 +4,7 @@ import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:permission_handler/permission_handler.dart';
 import 'package:project_prayer/models/prayer.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 
 class MapPage extends StatefulWidget {
   @override
@@ -16,13 +17,24 @@ class _MapPageState extends State<MapPage> {
   List<Marker> markers;
   final Firestore _firestore = Firestore.instance;
   List<Prayer> curprayers = [];
+  String name;
 
   @override
   void initState() {
     super.initState();
     markers = new List<Marker>();
+    getName();
+
     getCurrentLocation();
     _setUpMap();
+  }
+
+  void getName() async{
+    FirebaseUser user = await FirebaseAuth.instance.currentUser();
+    DocumentSnapshot data = await Firestore.instance.collection('users').document(user.uid).get();
+    setState(() {
+      name = data["name"];
+    });
   }
 
   void _onMapCreated(GoogleMapController controller) {

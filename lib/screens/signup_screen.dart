@@ -1,6 +1,7 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
+import 'package:project_prayer/screens/home_screen.dart';
 import 'package:project_prayer/screens/map_page.dart';
 
 class SignupScreen extends StatefulWidget {
@@ -130,7 +131,7 @@ class _SignupScreenState extends State<SignupScreen> {
                                     });
                                 Navigator.push(
                                   context,
-                                  MaterialPageRoute(builder: (context) => MapPage()),
+                                  MaterialPageRoute(builder: (context) => HomeScreen()),
                                 );
                               }
                             },
