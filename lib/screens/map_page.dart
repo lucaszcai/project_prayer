@@ -263,6 +263,9 @@ class _MapPageState extends State<MapPage> {
                           ));
                         });
                         Navigator.pop(context);
+                        setState(() {
+
+                        });
                       },
                       icon: Icon(Icons.check),
                       iconSize: 30.0,
