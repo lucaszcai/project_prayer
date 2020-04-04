@@ -10,6 +10,7 @@ class EntryScreen extends StatefulWidget {
 class _EntryScreenState extends State<EntryScreen> {
   int pageIndex = 0;
   List<Widget> pages = [LoginScreen(), SignupScreen()];
+  PageController _pageController = new PageController();
 
   @override
   Widget build(BuildContext context) {
@@ -24,6 +25,7 @@ class _EntryScreenState extends State<EntryScreen> {
                 onTap: () {
                   setState(() {
                     pageIndex = 0;
+                    _pageController.animateToPage(pageIndex, duration: Duration(milliseconds: 300), curve: Curves.linear);
                   });
                 },
                 child: Text(
@@ -42,6 +44,7 @@ class _EntryScreenState extends State<EntryScreen> {
                 onTap: (){
                   setState(() {
                     pageIndex = 1;
+                    _pageController.animateToPage(pageIndex, duration: Duration(milliseconds: 300), curve: Curves.linear);
                     //Navigator.push(context, MaterialPageRoute(builder: (_) => SignupScreen()));
                   });
                 },
@@ -60,10 +63,11 @@ class _EntryScreenState extends State<EntryScreen> {
             ],
           ),
           Expanded(
-            child: PageView.builder(
-              itemCount: pages.length,
+            child: PageView(
+              children: pages,
+                controller: _pageController,
                 physics: NeverScrollableScrollPhysics(),
-                itemBuilder: (context, position) => pages[pageIndex]
+
             ),
           )
         ],
