@@ -47,14 +47,15 @@ class _MapPageState extends State<MapPage> {
     }
   }
 
-  void addPrayertoDB(Prayer p){
-    _firestore.collection('calendars').document(widget.user).collection("entries").getDocuments().then((snapshot){
-      //for (DocumentSnapshot ds in snapshot.documents)
-      //  ds.reference.delete();
+  void addPrayertoDB(Prayer prayer){
+    CollectionReference v = _firestore.collection('prayers');
+    v.add(prayer.toMap());
+  }
 
-      CollectionReference v = _firestore.collection('calendars').document(widget.user).collection("entries");
-      v.add(p.toMap());
-
+  void getLocationPrayers(LatLng location){
+    _firestore.collection('prayers').getDocuments().then((snapshot){
+      for (DocumentSnapshot ds in snapshot.documents)
+        ds.reference.delete();
     });
   }
 
