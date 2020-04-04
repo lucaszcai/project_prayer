@@ -286,10 +286,21 @@ class _MapPageState extends State<MapPage> {
                     GestureDetector(
                       onTap: _showSelectImageDialog,
                       child: Container(
-                        height: 150,
-                        width: 150,
+                        height: 200,
+                        width: 300,
                         color: Colors.grey[300],
-                        child: Icon(Icons.add_a_photo, color: Colors.white70, size: 120.0,),
+                        child: curprayers.length == 0 ? Center(child: Text("No Prayers Yet"),
+                        )
+                        : ListView.builder(
+                            itemCount: curprayers.length,
+                            itemBuilder: (context, index){
+                              return(
+                                ListTile(
+                                  title: Text(curprayers[index].note),
+                                )
+                              );
+                            }
+                        ),
                       ),
                     ),
 
