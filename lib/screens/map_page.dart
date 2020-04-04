@@ -8,6 +8,7 @@ import 'package:project_prayer/models/prayer.dart';
 class MapPage extends StatefulWidget {
   @override
   _MapPageState createState() => _MapPageState();
+
 }
 
 class _MapPageState extends State<MapPage> {
@@ -36,7 +37,11 @@ class _MapPageState extends State<MapPage> {
           markers.add(
             new Marker(markerId: MarkerId("Current"),
                 position: LatLng(ds.data['lat'], ds.data['lng']),
-                icon: BitmapDescriptor.defaultMarkerWithHue(BitmapDescriptor.hueRed)),
+                icon: BitmapDescriptor.defaultMarkerWithHue(BitmapDescriptor.hueRed),
+            onTap: (){
+              onPrayerTap(LatLng(ds.data['lat'], ds.data['lng']));
+            }),
+
           );
         });
       }
@@ -86,6 +91,8 @@ class _MapPageState extends State<MapPage> {
         }
     });
 
+    print("CURPRAYERS"+curprayers.toString());
+
   }
 
   _showSelectImageDialog() {
@@ -130,6 +137,11 @@ class _MapPageState extends State<MapPage> {
     addGoalController.dispose();
     addNoteController.dispose();
     super.dispose();
+  }
+
+  void onPrayerTap(LatLng location){
+    getLocationPrayers(location);
+
   }
 
   final addGoalController = TextEditingController();
@@ -205,6 +217,15 @@ class _MapPageState extends State<MapPage> {
                     IconButton(
                       onPressed: (){
                         addPrayertoDB(new Prayer(id:null, note:addNoteController.text, datetime:DateTime.now().millisecondsSinceEpoch, lat:position.latitude, lng:position.longitude, goal:int.parse(addGoalController.text)));
+                        setState(() {
+                          markers.add(new Marker(
+                            markerId: MarkerId(position.hashCode.toString()),
+                            position: position,
+                            onTap:(){
+                              onPrayerTap(position);
+                            },
+                          ));
+                        });
                         Navigator.pop(context);
                       },
                       icon: Icon(Icons.check),
@@ -251,12 +272,6 @@ class _MapPageState extends State<MapPage> {
 
   addMarker(LatLng position) {
     print(position);
-    setState(() {
-      markers.add(new Marker(
-        markerId: MarkerId(position.hashCode.toString()),
-        position: position,
-      ));
-    });
     _onAddMarker(position);
   }
 }
