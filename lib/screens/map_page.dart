@@ -222,7 +222,7 @@ class _MapPageState extends State<MapPage> {
                       onPressed: () {
                         addPrayertoDB(new Prayer(
                           id: null,
-                          note: name + "|" + addNoteController.text,
+                          note: name + " | " + addNoteController.text,
                           datetime: DateTime.now().millisecondsSinceEpoch,
                           lat: position.latitude,
                           lng: position.longitude,
@@ -230,6 +230,7 @@ class _MapPageState extends State<MapPage> {
                           placeName: placeNameInputController.text,
                           cityName: cityInputController.text,
                         ));
+                        addNoteController.clear();
                         setState(() {
                           markers.add(new Marker(
                             markerId: MarkerId(position.hashCode.toString()),
@@ -352,13 +353,14 @@ class _MapPageState extends State<MapPage> {
                             lat: position.latitude,
                             lng: position.longitude,
                             goal: curprayers[0].goal));
+                        addNoteController.clear();
                         Navigator.pop(context, true);
                       },
                       child: Container(
                         height: 50.0,
                         width: 300.0,
                         decoration: BoxDecoration(
-                            color: Colors.grey[500],
+                            color: Colors.blue[500],
                             borderRadius: BorderRadius.all(
                               Radius.circular(30.0),
                             )),
@@ -366,7 +368,7 @@ class _MapPageState extends State<MapPage> {
                             child: Text(
                           'Pray for this Location',
                           style: TextStyle(
-                              fontSize: 20.0, fontWeight: FontWeight.w600),
+                              fontSize: 20.0, fontWeight: FontWeight.w600, color: Colors.white),
                         )),
                       ),
                     )
