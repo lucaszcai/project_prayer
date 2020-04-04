@@ -65,7 +65,7 @@ class _MapPageState extends State<MapPage> {
           onMapCreated: _onMapCreated,
           initialCameraPosition: CameraPosition(
             target: LatLng(currentLocation.latitude, currentLocation.longitude),
-            zoom: 5,
+            zoom: 12,
           ),
           onTap: (position) {
             addMarker(position);
