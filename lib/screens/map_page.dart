@@ -118,19 +118,21 @@ class _MapPageState extends State<MapPage> {
     v.add(prayer.toMap());
   }
 
-  Future<List<Prayer>> getLocationPrayers(LatLng location) async{
+  Future<List<Prayer>> getLocationPrayers(LatLng location) async {
     print("GETTING LOCATION PRAYERS");
-    List<Prayer>prayers = [];
-    _firestore.collection('prayers').getDocuments().then((snapshot) {
-      for (DocumentSnapshot ds in snapshot.documents)
-        if (ds.data['lat'] == location.latitude && ds.data['lng'] == location.longitude) {
-          prayers.add(Prayer.fromMap(ds.data));
-        }
-    });
+    List<Prayer> prayers = [];
+    QuerySnapshot snapshot =
+    await _firestore.collection('prayers').getDocuments();
+    for (DocumentSnapshot ds in snapshot.documents)
+      if (ds.data['lat'] == location.latitude &&
+          ds.data['lng'] == location.longitude) {
+        prayers.add(Prayer.fromMap(ds.data));
+      }
 
     print("CURPRAYERS" + prayers.toString());
     return prayers;
   }
+
 
   @override
   void dispose() {
@@ -223,7 +225,7 @@ class _MapPageState extends State<MapPage> {
                       onPressed: () {
                         addPrayertoDB(new Prayer(
                           id: null,
-                          note: name + "|" + addNoteController.text,
+                          note: name + " | " + addNoteController.text,
                           datetime: DateTime.now().millisecondsSinceEpoch,
                           lat: position.latitude,
                           lng: position.longitude,
@@ -231,6 +233,7 @@ class _MapPageState extends State<MapPage> {
                           placeName: placeNameInputController.text,
                           cityName: cityInputController.text,
                         ));
+                        addNoteController.clear();
                         setState(() {
                           markers.add(new Marker(
                             markerId: MarkerId(position.hashCode.toString()),
@@ -356,8 +359,15 @@ class _MapPageState extends State<MapPage> {
                     SizedBox(height: 50.0,),
 
                     GestureDetector(
-                      onTap: (){
-                        addPrayertoDB(new Prayer(id:null, note:name+"|"+addNoteController.text, datetime:DateTime.now().millisecondsSinceEpoch, lat:position.latitude, lng:position.longitude, goal:curprayers[0].goal));
+                      onTap: () {
+                        addPrayertoDB(new Prayer(
+                            id: null,
+                            note: name + "|" + addNoteController.text,
+                            datetime: DateTime.now().millisecondsSinceEpoch,
+                            lat: position.latitude,
+                            lng: position.longitude,
+                            goal: curprayers[0].goal));
+                        addNoteController.clear();
                         Navigator.pop(context, true);
                       },
                       child: Container(
@@ -410,3 +420,4 @@ class _MapPageState extends State<MapPage> {
     _onAddMarker(position);
   }
 }
+
