@@ -54,5 +54,4 @@ class Prayer {
     return 'Prayer{id: $id, goal: $goal, lat: $lat, lng: $lng, note: $note, datetime $datetime, placeName: $placeName, cityName: $cityName}';
   }
 
-
 }
