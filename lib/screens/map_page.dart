@@ -150,6 +150,8 @@ class _MapPageState extends State<MapPage> {
   final addGoalController = TextEditingController();
   final addNoteController = TextEditingController();
 
+  List<String> note = [];
+
   void _onAddMarker(LatLng position) {
     showModalBottomSheet(
         context: context,
@@ -290,16 +292,23 @@ class _MapPageState extends State<MapPage> {
                       child: Container(
                         height: 200,
                         width: 300,
-                        color: Colors.grey[300],
+                        //color: Colors.grey[300],
                         child: curprayers.length == 0 ? Center(child: Text("No Prayers Yet"),
                         )
                             : ListView.builder(
                             itemCount: curprayers.length,
                             itemBuilder: (context, index){
-                              return(
-                                  ListTile(
-                                    title: Text(curprayers[index].note),
-                                  )
+                              note = curprayers[index].note.split("|");
+                              return Column(
+                                  children: <Widget>[
+                                    Divider(),
+                                    ListTile(
+                                      title: Text(note[1]),
+                                      subtitle: Text(note[0]),
+                                    ),
+
+                                  ],
+
                               );
                             }
                         ),
@@ -355,7 +364,7 @@ class _MapPageState extends State<MapPage> {
                         height: 50.0,
                         width: 300.0,
                         decoration: BoxDecoration(
-                            color: Colors.grey[500],
+                            color: Colors.grey[300],
                             borderRadius: BorderRadius.all(Radius.circular(30.0),)
                         ),
                         child: Center(child: Text('Pray for this Location',
