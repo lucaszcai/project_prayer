@@ -1,0 +1,47 @@
+{
+  "project_info": {
+    "project_number": "683842000764",
+    "firebase_url": "https://climate-change-central.firebaseio.com",
+    "project_id": "climate-change-central",
+    "storage_bucket": "climate-change-central.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:683842000764:android:739299336661f90813f6f9",
+        "android_client_info": {
+          "package_name": "idea.project_prayer"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "683842000764-n9h9h0o0ucae7s38kousfa1g80580dsg.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyBBRQh0QL3-J0wCPCsjwJnXbu5pKi2Di9I"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "683842000764-n9h9h0o0ucae7s38kousfa1g80580dsg.apps.googleusercontent.com",
+              "client_type": 3
+            },
+            {
+              "client_id": "683842000764-r2j397lhq2s8ijt98d5crrf9rfdti62b.apps.googleusercontent.com",
+              "client_type": 2,
+              "ios_info": {
+                "bundle_id": "idea.projectPrayer"
+              }
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
