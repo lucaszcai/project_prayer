@@ -262,7 +262,6 @@ class _MapPageState extends State<MapPage> {
                           goal: int.parse(addGoalController.text),
                           placeName: placeNameInputController.text,
                           cityName: cityInputController.text,
-                          prayed: 1,
                         ));
                         setState(() {
                           markers.add(new Marker(
