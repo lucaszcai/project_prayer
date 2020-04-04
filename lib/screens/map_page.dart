@@ -280,13 +280,13 @@ class _MapPageState extends State<MapPage> {
     showModalBottomSheet(
         context: context,
         isScrollControlled: true,
-        builder: (context){
+        builder: (context) {
           return Padding(
-            padding: const EdgeInsets.only(bottom: 50.0),
+            padding: const EdgeInsets.only(bottom: 20.0),
             child: SingleChildScrollView(
               child: Container(
-                padding:
-                EdgeInsets.only(bottom: MediaQuery.of(context).viewInsets.bottom),
+                padding: EdgeInsets.only(
+                    bottom: MediaQuery.of(context).viewInsets.bottom),
                 child: Column(
                   children: <Widget>[
                     SizedBox(height: 40.0,),
@@ -304,21 +304,7 @@ class _MapPageState extends State<MapPage> {
                           fontSize: 20
                       ),
                     ),
-                    SizedBox(height: 50.0,),
-
-                    Padding(
-                      padding: EdgeInsets.symmetric(horizontal: 50.0),
-                      child: TextField(
-                        keyboardType: TextInputType.multiline,
-                        maxLines: null,
-                        controller: addNoteController,
-                        decoration: InputDecoration(
-                          hintText: 'Prayer Note',
-                        ),
-                      ),
-                    ),
-
-                    SizedBox(height: 50.0,),
+                    SizedBox(height: 20.0,),
 
                     GestureDetector(
                       onTap: _showSelectImageDialog,
@@ -328,20 +314,20 @@ class _MapPageState extends State<MapPage> {
                         color: Colors.grey[300],
                         child: curprayers.length == 0 ? Center(child: Text("No Prayers Yet"),
                         )
-                        : ListView.builder(
+                            : ListView.builder(
                             itemCount: curprayers.length,
                             itemBuilder: (context, index){
                               return(
-                                ListTile(
-                                  title: Text(curprayers[index].note),
-                                )
+                                  ListTile(
+                                    title: Text(curprayers[index].note),
+                                  )
                               );
                             }
                         ),
                       ),
                     ),
 
-                    SizedBox(height: 50.0,),
+                    SizedBox(height: 20.0,),
 
                     Row(
                       mainAxisAlignment: MainAxisAlignment.spaceAround,
@@ -369,13 +355,13 @@ class _MapPageState extends State<MapPage> {
                     SizedBox(height: 10.0,),
 
                     Padding(
-                      padding: const EdgeInsets.all(20.0),
+                      padding: const EdgeInsets.symmetric(horizontal: 20.0),
                       child: Text(
-                        'This is a school that has been impacted by COVID 19, we would appreciate any prayers'
+                          'This is a school that has been impacted by COVID 19, we would appreciate any prayers'
                       ),
                     ),
 
-                    SizedBox(height: 50.0,),
+                    SizedBox(height: 20.0,),
 
                     Padding(
                       padding: EdgeInsets.symmetric(horizontal: 50.0),
@@ -400,8 +386,8 @@ class _MapPageState extends State<MapPage> {
                         height: 50.0,
                         width: 300.0,
                         decoration: BoxDecoration(
-                          color: Colors.blue,
-                          borderRadius: BorderRadius.all(Radius.circular(30.0),)
+                            color: Colors.blue,
+                            borderRadius: BorderRadius.all(Radius.circular(30.0),)
                         ),
                         child: Center(child: Text('Pray for this Location',
                           style: TextStyle(fontSize: 20.0, fontWeight: FontWeight.w600),
@@ -413,8 +399,7 @@ class _MapPageState extends State<MapPage> {
               ),
             ),
           );
-        }
-    );
+        });
   }
 
   @override

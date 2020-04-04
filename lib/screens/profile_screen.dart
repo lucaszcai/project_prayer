@@ -9,7 +9,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Colors.orange,
+      //backgroundColor: Colors.orange,
       body: SafeArea(
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.center,
@@ -18,27 +18,18 @@ class _ProfileScreenState extends State<ProfileScreen> {
                 height: 50.0,
               ),
               Text(
-                'Vincent Do',
+                'Lucas Cai',
                 style: TextStyle(
                   fontSize: 40.0,
-                  color: Colors.white,
+                  color: Colors.black,
                   fontWeight: FontWeight.bold,
-                ),
-              ),
-              Text(
-                'Avid Conservationalist',
-                style: TextStyle(
-                    fontSize: 20.0,
-                    color: Colors.white,
-                    letterSpacing: 2.5,
-                    fontWeight: FontWeight.bold
                 ),
               ),
               SizedBox(
                 height: 20,
                 width: 200,
                 child: Divider(
-                  color: Colors.orange.shade700,
+                  color: Colors.black,
                 ),
               ),
               Container(color: Colors.white,
