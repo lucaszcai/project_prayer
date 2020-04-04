@@ -271,6 +271,113 @@ class _MapPageState extends State<MapPage> {
         });
   }
 
+  void _viewMarker(){
+    showModalBottomSheet(
+        context: context,
+        isScrollControlled: true,
+        builder: (context){
+          return Padding(
+            padding: const EdgeInsets.only(bottom: 50.0),
+            child: SingleChildScrollView(
+              child: Container(
+                padding:
+                EdgeInsets.only(bottom: MediaQuery.of(context).viewInsets.bottom),
+                child: Column(
+                  children: <Widget>[
+                    SizedBox(height: 40.0,),
+                    Text(
+                      'La Centerra',
+                      style: TextStyle(
+                          fontWeight: FontWeight.bold,
+                          fontSize: 40
+                      ),
+                    ),
+                    Text(
+                      'Katy, Texas',
+                      style: TextStyle(
+                          fontWeight: FontWeight.w400,
+                          fontSize: 20
+                      ),
+                    ),
+                    SizedBox(height: 50.0,),
+
+                    GestureDetector(
+                      onTap: _showSelectImageDialog,
+                      child: Container(
+                        height: 200,
+                        width: 300,
+                        color: Colors.grey[300],
+                        child: curprayers.length == 0 ? Center(child: Text("No Prayers Yet"),
+                        )
+                        : ListView.builder(
+                            itemCount: curprayers.length,
+                            itemBuilder: (context, index){
+                              return(
+                                ListTile(
+                                  title: Text(curprayers[index].note),
+                                )
+                              );
+                            }
+                        ),
+                      ),
+                    ),
+
+                    SizedBox(height: 50.0,),
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceAround,
+                      children: <Widget>[
+                        Spacer(),
+                        Text(
+                          '34',
+                          style: TextStyle(
+                            fontSize: 30.0,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                        Text(
+                          '/100 prayers',
+                          style: TextStyle(
+                            fontSize: 20.0,
+                            fontWeight: FontWeight.w600,
+                          ),
+                        ),
+                        Spacer()
+                      ],
+                    ),
+
+
+                    SizedBox(height: 10.0,),
+
+                    Padding(
+                      padding: const EdgeInsets.all(20.0),
+                      child: Text(
+                        'This is a school that has been impacted by COVID 19, we would appreciate any prayers'
+                      ),
+                    ),
+
+                    SizedBox(height: 50.0,),
+
+                    GestureDetector(
+                      onTap: (){},
+                      child: Container(
+                        height: 50.0,
+                        width: 300.0,
+                        decoration: BoxDecoration(
+                          color: Colors.blue,
+                          borderRadius: BorderRadius.all(Radius.circular(30.0),)
+                        ),
+                        child: Center(child: Text('Pray for this Location', style: TextStyle(fontSize: 20.0, fontWeight: FontWeight.w600),)),
+                      ),
+                    )
+                  ],
+                ),
+              ),
+            ),
+          );
+        }
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     if (currentLocation == null) {
@@ -283,7 +390,7 @@ class _MapPageState extends State<MapPage> {
       return Scaffold(
         floatingActionButton: FloatingActionButton(
           child: Icon(Icons.add),
-          onPressed: null,
+          onPressed: _viewMarker,
         ),
         body: GoogleMap(
           onMapCreated: _onMapCreated,
