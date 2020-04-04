@@ -1,5 +1,3 @@
-import 'dart:html';
-
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
@@ -24,11 +22,27 @@ class _MapPageState extends State<MapPage> {
     super.initState();
     markers = new List<Marker>();
     getCurrentLocation();
+    _setUpMap();
   }
 
   void _onMapCreated(GoogleMapController controller) {
     mapController = controller;
   }
+
+  void _setUpMap() async {
+    _firestore.collection('prayers').getDocuments().then((snapshot){
+      for (DocumentSnapshot ds in snapshot.documents){
+        setState(() {
+          markers.add(
+            new Marker(markerId: MarkerId("Current"),
+                position: LatLng(ds.data['lat'], ds.data['lng']),
+                icon: BitmapDescriptor.defaultMarkerWithHue(BitmapDescriptor.hueRed)),
+          );
+        });
+      }
+    });
+  }
+
 
   void getCurrentLocation() async {
     var status = await Permission.location.status;
@@ -56,6 +70,8 @@ class _MapPageState extends State<MapPage> {
       );
     }
   }
+
+  //Database code
 
   void addPrayertoDB(Prayer prayer){
     CollectionReference v = _firestore.collection('prayers');
@@ -108,7 +124,17 @@ class _MapPageState extends State<MapPage> {
     );
   }
 
-  void _onAddMarker(){
+  @override
+  void dispose() {
+    // Clean up the controller when the widget is disposed.
+    addGoalController.dispose();
+    addNoteController.dispose();
+    super.dispose();
+  }
+
+  final addGoalController = TextEditingController();
+  final addNoteController = TextEditingController();
+  void _onAddMarker(LatLng position){
     showModalBottomSheet(
         context: context,
         isScrollControlled: true,
@@ -152,6 +178,7 @@ class _MapPageState extends State<MapPage> {
                     Padding(
                       padding: EdgeInsets.symmetric(horizontal: 150.0),
                       child: TextField(
+                        controller: addGoalController,
                         decoration: InputDecoration(
                           hintText: 'Prayer Goal',
                         ),
@@ -166,8 +193,9 @@ class _MapPageState extends State<MapPage> {
                       child: TextField(
                         keyboardType: TextInputType.multiline,
                         maxLines: null,
+                        controller: addNoteController,
                         decoration: InputDecoration(
-                          hintText: 'Description',
+                          hintText: 'Prayer Note',
                         ),
                       ),
                     ),
@@ -175,7 +203,10 @@ class _MapPageState extends State<MapPage> {
                     SizedBox(height: 50.0,),
 
                     IconButton(
-                      onPressed: () => Navigator.pop(context),
+                      onPressed: (){
+                        addPrayertoDB(new Prayer(id:null, note:addNoteController.text, datetime:DateTime.now().millisecondsSinceEpoch, lat:position.latitude, lng:position.longitude, goal:int.parse(addGoalController.text)));
+                        Navigator.pop(context);
+                      },
                       icon: Icon(Icons.check),
                       iconSize: 30.0,
                       color: Colors.blue,
@@ -201,7 +232,7 @@ class _MapPageState extends State<MapPage> {
       return Scaffold(
         floatingActionButton: FloatingActionButton(
           child: Icon(Icons.add),
-          onPressed: _onAddMarker,
+          onPressed: null,
         ),
         body: GoogleMap(
           onMapCreated: _onMapCreated,
@@ -220,13 +251,12 @@ class _MapPageState extends State<MapPage> {
 
   addMarker(LatLng position) {
     print(position);
-    addPrayertoDB(new Prayer(id:null, note:"hi", datetime:1003, lat:100.100, lng:100.100, goal:45));
-    markers.add(new Marker(
-      markerId: MarkerId(position.hashCode.toString()),
-      position: position,
-    ));
     setState(() {
-
+      markers.add(new Marker(
+        markerId: MarkerId(position.hashCode.toString()),
+        position: position,
+      ));
     });
+    _onAddMarker(position);
   }
 }
