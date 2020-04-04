@@ -18,7 +18,7 @@ class _MapPageState extends State<MapPage> {
   List<Marker> markers;
   final Firestore _firestore = Firestore.instance;
   List<Prayer> curprayers = [];
-  String name;
+  String name = "";
 
   @override
   void initState() {
@@ -228,7 +228,7 @@ class _MapPageState extends State<MapPage> {
 
                     IconButton(
                       onPressed: (){
-                        addPrayertoDB(new Prayer(id:null, note:addNoteController.text, datetime:DateTime.now().millisecondsSinceEpoch, lat:position.latitude, lng:position.longitude, goal:int.parse(addGoalController.text)));
+                        addPrayertoDB(new Prayer(id:null, note:name+"|"+addNoteController.text, datetime:DateTime.now().millisecondsSinceEpoch, lat:position.latitude, lng:position.longitude, goal:int.parse(addGoalController.text)));
                         setState(() {
                           markers.add(new Marker(
                             markerId: MarkerId(position.hashCode.toString()),
