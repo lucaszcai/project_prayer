@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:project_prayer/screens/add_marker_screen.dart';
 import 'package:project_prayer/screens/entry_screen.dart';
+import 'package:project_prayer/screens/home_screen.dart';
 import 'package:project_prayer/screens/login_screen.dart';
 import 'package:project_prayer/screens/map_page.dart';
 
@@ -25,7 +26,7 @@ class MyApp extends StatelessWidget {
         // is not restarted.
         primarySwatch: Colors.blue,
       ),
-      home: MapPage(),
+      home: EntryScreen(),
     );
   }
 }

@@ -313,7 +313,7 @@ class _MapPageState extends State<MapPage> {
       return Scaffold(
         floatingActionButton: FloatingActionButton(
           child: Icon(Icons.add),
-          onPressed: null,
+          onPressed: _viewMarker,
         ),
         body: GoogleMap(
           onMapCreated: _onMapCreated,
