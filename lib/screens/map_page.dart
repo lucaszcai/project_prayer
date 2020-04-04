@@ -1,4 +1,3 @@
-
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
@@ -18,7 +17,6 @@ class _MapPageState extends State<MapPage> {
   Position currentLocation;
   List<Marker> markers;
   final Firestore _firestore = Firestore.instance;
-  List<Prayer> curprayers = [];
   String name = "";
   TextEditingController placeNameInputController;
   TextEditingController cityInputController;
@@ -40,7 +38,7 @@ class _MapPageState extends State<MapPage> {
   void getName() async {
     FirebaseUser user = await FirebaseAuth.instance.currentUser();
     DocumentSnapshot data =
-        await Firestore.instance.collection('users').document(user.uid).get();
+    await Firestore.instance.collection('users').document(user.uid).get();
     setState(() {
       name = data["name"];
     });
@@ -70,7 +68,7 @@ class _MapPageState extends State<MapPage> {
         setState(() {
           markers.add(
             new Marker(
-                markerId: MarkerId("Current"),
+                markerId: MarkerId(LatLng(ds.data['lat'], ds.data['lng']).hashCode.toString()),
                 position: LatLng(ds.data['lat'], ds.data['lng']),
                 icon: BitmapDescriptor.defaultMarkerWithHue(hue),
                 onTap: () {
@@ -88,7 +86,7 @@ class _MapPageState extends State<MapPage> {
 
     if (status.isUndetermined || status.isDenied) {
       Map<Permission, PermissionStatus> statues =
-          await [Permission.location].request();
+      await [Permission.location].request();
     }
 
     status = await Permission.location.status;
@@ -104,9 +102,9 @@ class _MapPageState extends State<MapPage> {
       print(currentLocation);
       markers.add(
         new Marker(
-            markerId: MarkerId("Current"),
+            markerId: MarkerId(LatLng(currentLocation.latitude, currentLocation.longitude).hashCode.toString()),
             position:
-                LatLng(currentLocation.latitude, currentLocation.longitude),
+            LatLng(currentLocation.latitude, currentLocation.longitude),
             icon: BitmapDescriptor.defaultMarkerWithHue(
                 BitmapDescriptor.hueBlue)),
       );
@@ -120,52 +118,18 @@ class _MapPageState extends State<MapPage> {
     v.add(prayer.toMap());
   }
 
-  void getLocationPrayers(LatLng location) {
+  Future<List<Prayer>> getLocationPrayers(LatLng location) async{
+    print("GETTING LOCATION PRAYERS");
+    List<Prayer>prayers = [];
     _firestore.collection('prayers').getDocuments().then((snapshot) {
       for (DocumentSnapshot ds in snapshot.documents)
-        if (ds.data['lat'] == location.latitude &&
-            ds.data['lng'] == location.longitude) {
-          curprayers.add(Prayer.fromMap(ds.data));
+        if (ds.data['lat'] == location.latitude && ds.data['lng'] == location.longitude) {
+          prayers.add(Prayer.fromMap(ds.data));
         }
     });
 
-    print("CURPRAYERS" + curprayers.toString());
-  }
-
-  _showSelectImageDialog() {
-    return _androidDialog();
-  }
-
-
-
-  _androidDialog() {
-    showDialog(
-      context: context,
-      builder: (BuildContext context) {
-        return SimpleDialog(
-          title: Text('Add Photo'),
-          children: <Widget>[
-            SimpleDialogOption(
-              child: Text('Take Photo'),
-              onPressed: () {},
-            ),
-            SimpleDialogOption(
-              child: Text('Choose From Gallery'),
-              onPressed: () => {},
-            ),
-            SimpleDialogOption(
-              child: Text(
-                'Cancel',
-                style: TextStyle(
-                  color: Colors.redAccent,
-                ),
-              ),
-              onPressed: () => Navigator.pop(context, true),
-            ),
-          ],
-        );
-      },
-    );
+    print("CURPRAYERS" + prayers.toString());
+    return prayers;
   }
 
   @override
@@ -177,8 +141,10 @@ class _MapPageState extends State<MapPage> {
   }
 
   void onPrayerTap(LatLng location) {
-    getLocationPrayers(location);
-    _viewMarker(location);
+    getLocationPrayers(location).then((value) {
+      print("hello");
+      _viewMarker(location, value);
+    });
   }
 
   final addGoalController = TextEditingController();
@@ -206,7 +172,7 @@ class _MapPageState extends State<MapPage> {
                         controller: placeNameInputController,
                         decoration: InputDecoration(hintText: 'Street Name'),
                         style:
-                            TextStyle(fontWeight: FontWeight.bold, fontSize: 40),
+                        TextStyle(fontWeight: FontWeight.bold, fontSize: 40),
                       ),
                     ),
                     SizedBox(height: 10.0,),
@@ -216,7 +182,7 @@ class _MapPageState extends State<MapPage> {
                         controller: cityInputController,
                         decoration: InputDecoration(hintText: 'City/Province'),
                         style:
-                            TextStyle(fontWeight: FontWeight.w400, fontSize: 20),
+                        TextStyle(fontWeight: FontWeight.w400, fontSize: 20),
                       ),
                     ),
 
@@ -289,7 +255,7 @@ class _MapPageState extends State<MapPage> {
         });
   }
 
-  void _viewMarker(LatLng position) {
+  void _viewMarker(LatLng position, List<Prayer>curprayers){
     showModalBottomSheet(
         context: context,
         isScrollControlled: true,
@@ -304,14 +270,14 @@ class _MapPageState extends State<MapPage> {
                   children: <Widget>[
                     SizedBox(height: 40.0,),
                     Text(
-                      'La Centerra',
+                      '${curprayers[0].placeName}',
                       style: TextStyle(
                           fontWeight: FontWeight.bold,
                           fontSize: 40
                       ),
                     ),
                     Text(
-                      'Katy, Texas',
+                      '${curprayers[0].cityName}',
                       style: TextStyle(
                           fontWeight: FontWeight.w400,
                           fontSize: 20
@@ -320,7 +286,7 @@ class _MapPageState extends State<MapPage> {
                     SizedBox(height: 20.0,),
 
                     GestureDetector(
-                      onTap: _showSelectImageDialog,
+                      onTap: null,
                       child: Container(
                         height: 200,
                         width: 300,
@@ -347,14 +313,14 @@ class _MapPageState extends State<MapPage> {
                       children: <Widget>[
                         Spacer(),
                         Text(
-                          '34',
+                          '${curprayers.length}',
                           style: TextStyle(
                             fontSize: 30.0,
                             fontWeight: FontWeight.bold,
                           ),
                         ),
                         Text(
-                          '/100 prayers',
+                          '/${curprayers[0].goal} prayers',
                           style: TextStyle(
                             fontSize: 20.0,
                             fontWeight: FontWeight.w600,
@@ -362,16 +328,6 @@ class _MapPageState extends State<MapPage> {
                         ),
                         Spacer()
                       ],
-                    ),
-
-
-                    SizedBox(height: 10.0,),
-
-                    Padding(
-                      padding: const EdgeInsets.symmetric(horizontal: 20.0),
-                      child: Text(
-                          'This is a school that has been impacted by COVID 19, we would appreciate any prayers'
-                      ),
                     ),
 
                     SizedBox(height: 20.0,),
