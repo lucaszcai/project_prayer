@@ -15,13 +15,68 @@ class _HomeScreenState extends State<HomeScreen> {
   var _pageOptions = [
     MapPage(),
     StatisticsScreen(),
-    ProfileScreen(),
+    //ProfileScreen(),
   ];
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      //appBar: AppBar(backgroundColor: Colors.white,),
+      appBar: AppBar(
+        backgroundColor: Colors.white,
+        iconTheme: IconThemeData(color: Colors.black),
+        //leading: Icon(Icons.menu, color: Colors.black,),
+      ),
+      drawer: Drawer(
+        child: Column(
+          children: <Widget>[
+            DrawerHeader(child: Text('Lucas Cai', style: TextStyle(fontSize: 30.0),),),
+            Container(
+              padding: EdgeInsets.all(10.0),
+              margin: EdgeInsets.symmetric(vertical: 10.0,horizontal: 25.0),
+              child: Row(
+                children: <Widget>[
+                  Icon(
+                    Icons.flag,
+                    color: Colors.black,
+                  ),
+                  SizedBox(
+                    width: 10.0,
+                  ),
+                  Text(
+                    'Prayers: 25',
+                    style: TextStyle(
+                      color: Colors.black,
+                      fontSize: 20.0,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            Container(
+              padding: EdgeInsets.all(10.0),
+              margin: EdgeInsets.symmetric(vertical: 10.0,horizontal: 25.0),
+              child: Row(
+                children: <Widget>[
+                  Icon(
+                    Icons.add_location,
+                    color: Colors.black,
+                  ),
+                  SizedBox(
+                    width: 10.0,
+                  ),
+                  Text(
+                    'Markers Created: 74',
+                    style: TextStyle(
+                      color: Colors.black,
+                      fontSize: 20.0,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ],
+        ),
+      ),
       body: _pageOptions[_selectedTab],
       bottomNavigationBar: Container(
         decoration: BoxDecoration(
@@ -40,7 +95,7 @@ class _HomeScreenState extends State<HomeScreen> {
           items: <Widget>[
             Icon(Icons.map, size: 30),
             Icon(Icons.insert_chart, size: 30),
-            Icon(Icons.account_circle, size: 30),
+            //Icon(Icons.account_circle, size: 30),
           ],
           onTap: (index) {
             setState(() {
