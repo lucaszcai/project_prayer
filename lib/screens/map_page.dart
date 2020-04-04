@@ -374,11 +374,11 @@ class _MapPageState extends State<MapPage> {
                         height: 50.0,
                         width: 300.0,
                         decoration: BoxDecoration(
-                            color: Colors.grey[300],
+                            color: Colors.blue[500],
                             borderRadius: BorderRadius.all(Radius.circular(30.0),)
                         ),
                         child: Center(child: Text('Pray for this Location',
-                          style: TextStyle(fontSize: 20.0, fontWeight: FontWeight.w600),
+                          style: TextStyle(fontSize: 20.0, fontWeight: FontWeight.w600, color: Colors.white),
                         )),
                       ),
                     )
