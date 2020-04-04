@@ -9,9 +9,8 @@ class Prayer {
   String cityName;
   String note;
   int datetime;
-  int prayed;
 
-  Prayer({this.id, this.note, this.datetime, this.lat, this.lng, this.goal, this.placeName, this.cityName, this.prayed});
+  Prayer({this.id, this.note, this.datetime, this.lat, this.lng, this.goal, this.placeName, this.cityName});
 
   Map<String, dynamic> toMap() =>{
     "id": id,
@@ -22,7 +21,6 @@ class Prayer {
     "datetime":datetime,
     "placeName":placeName,
     "cityName":cityName,
-    "prayed":prayed,
   };
 
   factory Prayer.fromMap(Map<String, dynamic> json) => new Prayer(
@@ -34,7 +32,6 @@ class Prayer {
     lng:double.parse(json["lng"]),
     placeName: json["placeName"],
     cityName: json["cityName"],
-    prayed: int.parse(json["prayed"]),
   );
 
 
@@ -49,13 +46,12 @@ class Prayer {
       lng:double.parse(json["lng"]),
       placeName: json["placeName"],
       cityName: json["cityName"],
-      prayed: int.parse(json["prayed]"]),
     );
   }
 
   @override
   String toString() {
-    return 'Prayer{id: $id, goal: $goal, lat: $lat, lng: $lng, note: $note, datetime $datetime, placeName: $placeName, cityName: $cityName, prayed: $prayed}';
+    return 'Prayer{id: $id, goal: $goal, lat: $lat, lng: $lng, note: $note, datetime $datetime, placeName: $placeName, cityName: $cityName}';
   }
 
 }

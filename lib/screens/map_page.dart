@@ -54,7 +54,7 @@ class _MapPageState extends State<MapPage> {
     _firestore.collection('prayers').getDocuments().then((snapshot) {
       for (DocumentSnapshot ds in snapshot.documents) {
         double hue = 0;
-        double percent = ds.data["prayed"] / ds.data["goal"];
+        double percent = 0.1; //CHANGE
         if (percent < 0.33) {
           hue = BitmapDescriptor.hueRed;
         }
@@ -160,7 +160,7 @@ class _MapPageState extends State<MapPage> {
                   color: Colors.redAccent,
                 ),
               ),
-              onPressed: () => Navigator.pop(context),
+              onPressed: () => Navigator.pop(context, true),
             ),
           ],
         );
@@ -262,6 +262,7 @@ class _MapPageState extends State<MapPage> {
                           goal: int.parse(addGoalController.text),
                           placeName: placeNameInputController.text,
                           cityName: cityInputController.text,
+                          prayed: 1,
                         ));
                         setState(() {
                           markers.add(new Marker(
@@ -392,8 +393,8 @@ class _MapPageState extends State<MapPage> {
 
                     GestureDetector(
                       onTap: (){
-                        addPrayertoDB(new Prayer(id:null, note:name+"|"+addNoteController.text, datetime:DateTime.now().millisecondsSinceEpoch, lat:position.latitude, lng:position.longitude, goal:curprayers[0].goal, prayed: 1));
-                        Navigator.pop(context);
+                        addPrayertoDB(new Prayer(id:null, note:name+"|"+addNoteController.text, datetime:DateTime.now().millisecondsSinceEpoch, lat:position.latitude, lng:position.longitude, goal:curprayers[0].goal));
+                        Navigator.pop(context, true);
                       },
                       child: Container(
                         height: 50.0,
