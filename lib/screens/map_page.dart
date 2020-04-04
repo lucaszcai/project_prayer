@@ -254,6 +254,27 @@ class _MapPageState extends State<MapPage> {
         });
   }
 
+  void updatePrayer(LatLng position, String note){
+    String id = "";
+    Prayer temp = null;
+    _firestore.collection('prayers').getDocuments().then((snapshot){
+      for (DocumentSnapshot ds in snapshot.documents) {
+        if (ds.data['lat'] == position.latitude &&
+            ds.data['lng'] == position.longitude) {
+          id = ds.documentID.toString();
+          temp = Prayer.fromMap(ds.data);
+          temp.total = (temp.total+1);
+        }
+      }
+
+      CollectionReference v = _firestore.collection('prayers').document(id).collection("notes");
+      print(id);
+      _firestore.collection('prayers').document(id).updateData(temp.toMap());
+      v.add({'note':note});
+
+    });
+  }
+
   void _viewMarker(LatLng position, List<Prayer> curprayers) {
     showModalBottomSheet(
         context: context,
