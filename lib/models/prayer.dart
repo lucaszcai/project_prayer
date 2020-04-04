@@ -25,7 +25,7 @@ class Prayer {
 
   factory Prayer.fromMap(Map<String, dynamic> json) => new Prayer(
     id: json["id"],
-    datetime:int.parse(json["datetime"]),
+    datetime:json["datetime"],
     note:json["note"],
     goal:int.parse(json["goal"]),
     lat:double.parse(json["lat"]),

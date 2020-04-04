@@ -74,6 +74,7 @@ class _MapPageState extends State<MapPage> {
                 position: LatLng(ds.data['lat'], ds.data['lng']),
                 icon: BitmapDescriptor.defaultMarkerWithHue(hue),
                 onTap: () {
+                  print("HAHAHAHA I HAVE TAPPED THIS THING");
                   onPrayerTap(LatLng(ds.data['lat'], ds.data['lng']));
                 }),
           );
@@ -120,12 +121,14 @@ class _MapPageState extends State<MapPage> {
     v.add(prayer.toMap());
   }
 
-  void getLocationPrayers(LatLng location) {
+  void getLocationPrayers(LatLng location){
     _firestore.collection('prayers').getDocuments().then((snapshot) {
       for (DocumentSnapshot ds in snapshot.documents)
         if (ds.data['lat'] == location.latitude &&
             ds.data['lng'] == location.longitude) {
-          curprayers.add(Prayer.fromMap(ds.data));
+          setState(() {
+            curprayers.add(Prayer.fromMap(ds.data));
+          });
         }
     });
 
@@ -268,6 +271,7 @@ class _MapPageState extends State<MapPage> {
                             markerId: MarkerId(position.hashCode.toString()),
                             position: position,
                             onTap: () {
+                              print("TAPPED");
                               onPrayerTap(position);
                             },
                           ));
@@ -304,14 +308,14 @@ class _MapPageState extends State<MapPage> {
                   children: <Widget>[
                     SizedBox(height: 40.0,),
                     Text(
-                      'La Centerra',
+                      '${curprayers[0].placeName}',
                       style: TextStyle(
                           fontWeight: FontWeight.bold,
                           fontSize: 40
                       ),
                     ),
                     Text(
-                      'Katy, Texas',
+                      '${curprayers[0].cityName}',
                       style: TextStyle(
                           fontWeight: FontWeight.w400,
                           fontSize: 20
@@ -347,14 +351,14 @@ class _MapPageState extends State<MapPage> {
                       children: <Widget>[
                         Spacer(),
                         Text(
-                          '34',
+                          '${curprayers.length}',
                           style: TextStyle(
                             fontSize: 30.0,
                             fontWeight: FontWeight.bold,
                           ),
                         ),
                         Text(
-                          '/100 prayers',
+                          '/${curprayers[0].goal} prayers',
                           style: TextStyle(
                             fontSize: 20.0,
                             fontWeight: FontWeight.w600,
