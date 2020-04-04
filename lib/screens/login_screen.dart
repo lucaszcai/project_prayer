@@ -70,7 +70,7 @@ class _LoginScreenState extends State<LoginScreen> {
 
                     SizedBox(height: 40.0),
                     GestureDetector(
-                      onTap: () {Navigator.push(context, MaterialPageRoute(builder: (_) => MapPage()));
+                      onTap: () {Navigator.push(context, MaterialPageRoute(builder: (_) => HomeScreen()));
                       print("hi");},
                       child: Container(
                       height: 50.0,
