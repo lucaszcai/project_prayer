@@ -12,14 +12,14 @@ class LoginScreen extends StatefulWidget {
 
 class _LoginScreenState extends State<LoginScreen> {
   int pageIndex = 0;
-  TextEditingController emailController;
-  TextEditingController passwordController;
-  GlobalKey<FormState> formKey = new GlobalKey();
+  TextEditingController emailInputController;
+  TextEditingController passwordInputController;
+  final GlobalKey<FormState> _loginFormKey = new GlobalKey();
 
   @override
   void initState() {
-    emailController = new TextEditingController();
-    passwordController = new TextEditingController();
+    emailInputController = new TextEditingController();
+    passwordInputController = new TextEditingController();
   }
 
   String emailValidator(String value) {
@@ -65,11 +65,11 @@ class _LoginScreenState extends State<LoginScreen> {
           Container(
               padding: EdgeInsets.only(top: 35.0, left: 20.0, right: 20.0),
               child: Form(
-                key: formKey,
+                key: _loginFormKey,
                 child: Column(
                   children: <Widget>[
                     TextFormField(
-                      controller: emailController,
+                      controller: emailInputController,
                       decoration: InputDecoration(
                           labelText: 'EMAIL',
                           labelStyle: TextStyle(
@@ -82,7 +82,7 @@ class _LoginScreenState extends State<LoginScreen> {
                     ),
                     SizedBox(height: 20.0),
                     TextFormField(
-                      controller: passwordController,
+                      controller: passwordInputController,
                       decoration: InputDecoration(
                           labelText: 'PASSWORD',
                           labelStyle: TextStyle(
@@ -96,13 +96,16 @@ class _LoginScreenState extends State<LoginScreen> {
                     SizedBox(height: 40.0),
                     GestureDetector(
                       onTap: () {
-                        if (formKey.currentState.validate()) {
-                          FirebaseAuth.instance.signInWithEmailAndPassword(email: emailController.text, password: passwordController.text).then(
+                        if (_loginFormKey.currentState.validate()) {
+                          FirebaseAuth.instance.signInWithEmailAndPassword(email: emailInputController.text, password: passwordInputController.text).then(
                               (currentUser) {
-                                Navigator.push(
-                                  context,
-                                  MaterialPageRoute(builder: (context) => MapPage()),
-                                );
+                                Firestore.instance.collection('users').document(currentUser.user.uid).get().then(
+                                    (value) {
+                                      Navigator.push(
+                                        context,
+                                        MaterialPageRoute(builder: (context) => MapPage()),
+                                      );
+                                    });
                               }
                           );
                         }
