@@ -15,6 +15,7 @@ class _MapPageState extends State<MapPage> {
   @override
   void initState() {
     super.initState();
+    getCurrentLocation();
   }
 
   void _onMapCreated(GoogleMapController controller) {
@@ -25,31 +26,39 @@ class _MapPageState extends State<MapPage> {
     var status = await Permission.location.status;
 
     if (status.isUndetermined || status.isRestricted || status.isDenied) {
-      Map<Permission, PermissionStatus> statues = await [
-        Permission.location
-      ].request();
+      Map<Permission, PermissionStatus> statues =
+          await [Permission.location].request();
     }
 
+    status = await Permission.location.status;
+    print(status);
+
     if (status.isGranted) {
-      currentLocation = await Geolocator().getCurrentPosition(desiredAccuracy: LocationAccuracy.high);
+      print('wait');
+      Position pos = await Geolocator()
+          .getCurrentPosition(desiredAccuracy: LocationAccuracy.high);
+      setState(() {
+        currentLocation = pos;
+      });
+      print(currentLocation);
     }
   }
 
   @override
   Widget build(BuildContext context) {
-    if (currentLocation = null) {
+    if (currentLocation == null) {
       return Scaffold(
         body: Center(
           child: CircularProgressIndicator(),
         ),
       );
-    }
-    else {
+    } else {
       return Scaffold(
         body: GoogleMap(
           onMapCreated: _onMapCreated,
           initialCameraPosition: CameraPosition(
-              target: LatLng(currentLocation.latitude, currentLocation.longitude),
+            target: LatLng(currentLocation.latitude, currentLocation.longitude),
+            zoom: 5,
           ),
         ),
       );
