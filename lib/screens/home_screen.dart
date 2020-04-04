@@ -1,7 +1,7 @@
 import 'package:curved_navigation_bar/curved_navigation_bar.dart';
 import 'package:flutter/material.dart';
 import 'package:project_prayer/screens/entry_screen.dart';
-import 'package:project_prayer/screens/map_screen.dart';
+import 'package:project_prayer/screens/map_page.dart';
 import 'package:project_prayer/screens/profile_screen.dart';
 import 'package:project_prayer/screens/statistics_screen.dart';
 
@@ -13,7 +13,7 @@ class HomeScreen extends StatefulWidget {
 class _HomeScreenState extends State<HomeScreen> {
   int _selectedTab = 0;
   var _pageOptions = [
-    MapScreen(),
+    MapPage(),
     StatisticsScreen(),
     ProfileScreen(),
   ];
