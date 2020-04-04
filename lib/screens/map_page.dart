@@ -28,8 +28,8 @@ class _MapPageState extends State<MapPage> {
     markers = new List<Marker>();
     placeNameInputController = new TextEditingController();
     cityInputController = new TextEditingController();
-    placeNameInputController.text = 'Street Name';
-    cityInputController.text = 'City, Province';
+    //placeNameInputController.text = 'Street Name';
+    //cityInputController.text = 'City, Province';
     getName();
 
     getCurrentLocation();
@@ -169,6 +169,7 @@ class _MapPageState extends State<MapPage> {
 
   final addGoalController = TextEditingController();
   final addNoteController = TextEditingController();
+
   void _onAddMarker(LatLng position) {
     showModalBottomSheet(
         context: context,
@@ -183,40 +184,35 @@ class _MapPageState extends State<MapPage> {
                 child: Column(
                   children: <Widget>[
                     SizedBox(
-                      height: 40.0,
+                      height: 30.0,
                     ),
-                    TextField(
-                      controller: placeNameInputController,
-                      style:
-                          TextStyle(fontWeight: FontWeight.bold, fontSize: 40),
-                    ),
-                    TextField(
-                      controller: cityInputController,
-                      style:
-                          TextStyle(fontWeight: FontWeight.w400, fontSize: 20),
-                    ),
-                    SizedBox(
-                      height: 50.0,
-                    ),
-                    GestureDetector(
-                      onTap: _showSelectImageDialog,
-                      child: Container(
-                        height: 150,
-                        width: 150,
-                        color: Colors.grey[300],
-                        child: Icon(
-                          Icons.add_a_photo,
-                          color: Colors.white70,
-                          size: 120.0,
-                        ),
+                    Padding(
+                      padding: const EdgeInsets.symmetric(horizontal: 25.0),
+                      child: TextField(
+                        controller: placeNameInputController,
+                        decoration: InputDecoration(hintText: 'Street Name'),
+                        style:
+                            TextStyle(fontWeight: FontWeight.bold, fontSize: 40),
                       ),
                     ),
+                    SizedBox(height: 10.0,),
+                    Padding(
+                      padding: const EdgeInsets.symmetric(horizontal: 25.0),
+                      child: TextField(
+                        controller: cityInputController,
+                        decoration: InputDecoration(hintText: 'City/Province'),
+                        style:
+                            TextStyle(fontWeight: FontWeight.w400, fontSize: 20),
+                      ),
+                    ),
+
                     SizedBox(
                       height: 50.0,
                     ),
                     Padding(
                       padding: EdgeInsets.symmetric(horizontal: 150.0),
                       child: TextField(
+                        textAlign: TextAlign.center,
                         controller: addGoalController,
                         decoration: InputDecoration(
                           hintText: 'Prayer Goal',
