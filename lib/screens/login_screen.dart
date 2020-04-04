@@ -103,7 +103,7 @@ class _LoginScreenState extends State<LoginScreen> {
                                     (value) {
                                       Navigator.push(
                                         context,
-                                        MaterialPageRoute(builder: (context) => MapPage()),
+                                        MaterialPageRoute(builder: (context) => HomeScreen()),
                                       );
                                     });
                               }
