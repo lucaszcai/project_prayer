@@ -1,4 +1,3 @@
-
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
@@ -10,6 +9,7 @@ import 'package:firebase_auth/firebase_auth.dart';
 class MapPage extends StatefulWidget {
   @override
   _MapPageState createState() => _MapPageState();
+
 }
 
 class _MapPageState extends State<MapPage> {
@@ -31,6 +31,7 @@ class _MapPageState extends State<MapPage> {
     placeNameInputController.text = 'Street Name';
     cityInputController.text = 'City, Province';
     getName();
+
     getCurrentLocation();
     _setUpMap();
   }
@@ -66,6 +67,7 @@ class _MapPageState extends State<MapPage> {
       }
     });
   }
+
 
   void getCurrentLocation() async {
     var status = await Permission.location.status;
@@ -120,6 +122,8 @@ class _MapPageState extends State<MapPage> {
     return _androidDialog();
   }
 
+
+
   _androidDialog() {
     showDialog(
       context: context,
@@ -160,6 +164,7 @@ class _MapPageState extends State<MapPage> {
 
   void onPrayerTap(LatLng location) {
     getLocationPrayers(location);
+    _viewMarker();
   }
 
   final addGoalController = TextEditingController();
@@ -301,6 +306,20 @@ class _MapPageState extends State<MapPage> {
                     ),
                     SizedBox(height: 50.0,),
 
+                    Padding(
+                      padding: EdgeInsets.symmetric(horizontal: 50.0),
+                      child: TextField(
+                        keyboardType: TextInputType.multiline,
+                        maxLines: null,
+                        controller: addNoteController,
+                        decoration: InputDecoration(
+                          hintText: 'Prayer Note',
+                        ),
+                      ),
+                    ),
+
+                    SizedBox(height: 50.0,),
+
                     GestureDetector(
                       onTap: _showSelectImageDialog,
                       child: Container(
@@ -358,7 +377,9 @@ class _MapPageState extends State<MapPage> {
                     SizedBox(height: 50.0,),
 
                     GestureDetector(
-                      onTap: (){},
+                      onTap: (){
+
+                      },
                       child: Container(
                         height: 50.0,
                         width: 300.0,
@@ -366,7 +387,9 @@ class _MapPageState extends State<MapPage> {
                           color: Colors.blue,
                           borderRadius: BorderRadius.all(Radius.circular(30.0),)
                         ),
-                        child: Center(child: Text('Pray for this Location', style: TextStyle(fontSize: 20.0, fontWeight: FontWeight.w600),)),
+                        child: Center(child: Text('Pray for this Location',
+                          style: TextStyle(fontSize: 20.0, fontWeight: FontWeight.w600),
+                        )),
                       ),
                     )
                   ],
