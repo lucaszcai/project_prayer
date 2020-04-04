@@ -93,7 +93,7 @@ class _MapPageState extends State<MapPage> {
             position:
                 LatLng(currentLocation.latitude, currentLocation.longitude),
             icon: BitmapDescriptor.defaultMarkerWithHue(
-                BitmapDescriptor.hueBlue)),
+                BitmapDescriptor.hueBlue),),
       );
     }
   }
@@ -166,6 +166,7 @@ class _MapPageState extends State<MapPage> {
 
   final addGoalController = TextEditingController();
   final addNoteController = TextEditingController();
+
   void _onAddMarker(LatLng position) {
     showModalBottomSheet(
         context: context,
