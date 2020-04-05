@@ -9,8 +9,9 @@ class Prayer {
   String cityName;
   String note;
   int datetime;
+  int total;
 
-  Prayer({this.id, this.note, this.datetime, this.lat, this.lng, this.goal, this.placeName, this.cityName});
+  Prayer({this.id, this.note, this.datetime, this.lat, this.lng, this.goal, this.placeName, this.cityName, this.total});
 
   Map<String, dynamic> toMap() =>{
     "id": id,
@@ -21,6 +22,7 @@ class Prayer {
     "datetime":datetime,
     "placeName":placeName,
     "cityName":cityName,
+    "total": total,
   };
 
   factory Prayer.fromMap(Map<String, dynamic> json) => new Prayer(
@@ -32,6 +34,7 @@ class Prayer {
     lng:json["lng"],
     placeName: json["placeName"],
     cityName: json["cityName"],
+    total: json["total"],
   );
 
 
