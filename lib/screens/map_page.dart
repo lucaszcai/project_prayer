@@ -244,9 +244,6 @@ class _MapPageState extends State<MapPage> {
                           ));
                         });
                         Navigator.pop(context, true);
-                        setState(() {
-
-                        });
                       },
                       icon: Icon(Icons.check),
                       iconSize: 30.0,
@@ -282,6 +279,7 @@ class _MapPageState extends State<MapPage> {
   }
 
   void _viewMarker(LatLng position, List<Prayer>curprayers){
+    print(curprayers);
     showModalBottomSheet(
         context: context,
         isScrollControlled: true,
@@ -387,7 +385,9 @@ class _MapPageState extends State<MapPage> {
                             datetime: DateTime.now().millisecondsSinceEpoch,
                             lat: position.latitude,
                             lng: position.longitude,
-                            goal: curprayers[0].goal));
+                            goal: curprayers[0].goal,
+                        placeName: curprayers[0].placeName,
+                        cityName: curprayers[0].cityName));
                         addNoteController.clear();
                         Navigator.pop(context, true);
                       },
