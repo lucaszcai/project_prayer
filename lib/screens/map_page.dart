@@ -184,7 +184,7 @@ class _MapPageState extends State<MapPage> {
                       padding: const EdgeInsets.symmetric(horizontal: 25.0),
                       child: TextField(
                         controller: cityInputController,
-                        decoration: InputDecoration(hintText: 'City/Province'),
+                        decoration: InputDecoration(hintText: 'City, Province'),
                         style:
                         TextStyle(fontWeight: FontWeight.w400, fontSize: 20),
                       ),
