@@ -11,7 +11,7 @@ import GoogleMaps
   ) -> Bool {
     GeneratedPluginRegistrant.register(with: self)
     var keys: NSDictionary?
-    if let path = NSBundle.mainBundle().pathForResource("Constants", ofType: "plist") {
+    if let path = Bundle.main.path(forResource: "Keys", ofType: "plist") {
         keys = NSDictionary(contentsOfFile: path)
     }
     if let dict = keys {
