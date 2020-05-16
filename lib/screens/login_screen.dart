@@ -49,16 +49,16 @@ class _LoginScreenState extends State<LoginScreen> {
                   children: <Widget>[
                     Container(
                       padding: EdgeInsets.fromLTRB(15.0, 100.0, 0.0, 0.0),
-                      child: Text('Project',
+                      child: Text('Adopt a',
                           style: TextStyle(
                               fontSize: 80.0, fontWeight: FontWeight.w300)),
                     ),
                     SizedBox(
-                      height: 10.0,
+                      height: 15.0,
                     ),
                     Container(
                       padding: EdgeInsets.fromLTRB(16.0, 165.0, 0.0, 0.0),
-                      child: Text('Prayer',
+                      child: Text('Street',
                           style: TextStyle(
                               fontSize: 80.0, fontWeight: FontWeight.bold)),
                     ),
