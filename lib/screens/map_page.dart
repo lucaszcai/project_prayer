@@ -13,6 +13,7 @@ import 'package:firebase_auth/firebase_auth.dart';
 class MapPage extends StatefulWidget {
   @override
   _MapPageState createState() => _MapPageState();
+
 }
 
 class _MapPageState extends State<MapPage> {
@@ -390,7 +391,13 @@ class _MapPageState extends State<MapPage> {
                                       Divider(),
                                       ListTile(
                                         title: Text(note[1]),
-                                        subtitle: Text(note[0]),
+                                        subtitle: Row(
+                                          children: [
+                                            Text(note[0]),
+                                            Spacer(),
+                                            Text('3/4/2020')
+                                          ],
+                                        ),
                                       ),
                                     ],
                                   );
