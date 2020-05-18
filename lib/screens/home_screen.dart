@@ -21,11 +21,14 @@ class _HomeScreenState extends State<HomeScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      /*
       appBar: AppBar(
+        automaticallyImplyLeading: false,
         backgroundColor: Colors.white,
         iconTheme: IconThemeData(color: Colors.black),
         //leading: Icon(Icons.menu, color: Colors.black,),
-      ),
+      ),*/
+      /*
       drawer: Drawer(
         child: Column(
           children: <Widget>[
@@ -77,6 +80,7 @@ class _HomeScreenState extends State<HomeScreen> {
           ],
         ),
       ),
+      */
       body: _pageOptions[_selectedTab],
       bottomNavigationBar: Container(
         decoration: BoxDecoration(

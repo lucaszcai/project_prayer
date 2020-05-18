@@ -38,7 +38,7 @@ class _MapPageState extends State<MapPage> {
   void getName() async {
     FirebaseUser user = await FirebaseAuth.instance.currentUser();
     DocumentSnapshot data =
-    await Firestore.instance.collection('users').document(user.uid).get();
+        await Firestore.instance.collection('users').document(user.uid).get();
     setState(() {
       name = data["name"];
     });
@@ -49,30 +49,32 @@ class _MapPageState extends State<MapPage> {
   }
 
   void _setUpMap() async {
+    print("SET UP");
     _firestore.collection('prayers').getDocuments().then((snapshot) {
       for (DocumentSnapshot ds in snapshot.documents) {
+        print(ds);
+        Prayer currentPrayer = Prayer.fromSnapshot(ds);
         double hue = 0;
-        double percent = 0.1; //CHANGE
+        double percent = currentPrayer.total / currentPrayer.goal; //CHANGE
         if (percent < 0.33) {
           hue = BitmapDescriptor.hueRed;
-        }
-        else if (percent < 0.67) {
+        } else if (percent < 0.67) {
           hue = BitmapDescriptor.hueOrange;
-        }
-        else if (percent < 1) {
+        } else if (percent < 1) {
           hue = BitmapDescriptor.hueYellow;
-        }
-        else {
+        } else {
           hue = BitmapDescriptor.hueGreen;
         }
+        print(currentPrayer);
         setState(() {
           markers.add(
             new Marker(
-                markerId: MarkerId(LatLng(ds.data['lat'], ds.data['lng']).hashCode.toString()),
+                markerId: MarkerId(
+                    LatLng(ds.data['lat'], ds.data['lng']).hashCode.toString()),
                 position: LatLng(ds.data['lat'], ds.data['lng']),
                 icon: BitmapDescriptor.defaultMarkerWithHue(hue),
                 onTap: () {
-                  onPrayerTap(LatLng(ds.data['lat'], ds.data['lng']));
+                  _viewMarker(currentPrayer);
                 }),
           );
         });
@@ -80,13 +82,12 @@ class _MapPageState extends State<MapPage> {
     });
   }
 
-
   void getCurrentLocation() async {
     var status = await Permission.location.status;
 
     if (status.isUndetermined || status.isDenied) {
       Map<Permission, PermissionStatus> statues =
-      await [Permission.location].request();
+          await [Permission.location].request();
     }
 
     status = await Permission.location.status;
@@ -102,9 +103,12 @@ class _MapPageState extends State<MapPage> {
       print(currentLocation);
       markers.add(
         new Marker(
-            markerId: MarkerId(LatLng(currentLocation.latitude, currentLocation.longitude).hashCode.toString()),
+            markerId: MarkerId(
+                LatLng(currentLocation.latitude, currentLocation.longitude)
+                    .hashCode
+                    .toString()),
             position:
-            LatLng(currentLocation.latitude, currentLocation.longitude),
+                LatLng(currentLocation.latitude, currentLocation.longitude),
             icon: BitmapDescriptor.defaultMarkerWithHue(
                 BitmapDescriptor.hueBlue)),
       );
@@ -113,26 +117,10 @@ class _MapPageState extends State<MapPage> {
 
   //Database code
 
-  void addPrayertoDB(Prayer prayer) {
+  Future<DocumentReference> addPrayertoDB(Prayer prayer) async {
     CollectionReference v = _firestore.collection('prayers');
-    v.add(prayer.toMap());
+    return v.add(prayer.toJson());
   }
-
-  Future<List<Prayer>> getLocationPrayers(LatLng location) async {
-    print("GETTING LOCATION PRAYERS");
-    List<Prayer> prayers = [];
-    QuerySnapshot snapshot =
-    await _firestore.collection('prayers').getDocuments();
-    for (DocumentSnapshot ds in snapshot.documents)
-      if (ds.data['lat'] == location.latitude &&
-          ds.data['lng'] == location.longitude) {
-        prayers.add(Prayer.fromMap(ds.data));
-      }
-
-    print("CURPRAYERS" + prayers.toString());
-    return prayers;
-  }
-
 
   @override
   void dispose() {
@@ -142,19 +130,14 @@ class _MapPageState extends State<MapPage> {
     super.dispose();
   }
 
-  void onPrayerTap(LatLng location) {
-    getLocationPrayers(location).then((value) {
-      print("hello");
-      _viewMarker(location, value);
-    });
-  }
-
   final addGoalController = TextEditingController();
   final addNoteController = TextEditingController();
 
   List<String> note = [];
 
   void _onAddMarker(LatLng position) {
+    List<String> holdNotes = new List();
+    holdNotes.add(name + " | " + addNoteController.text);
     showModalBottomSheet(
         context: context,
         isScrollControlled: true,
@@ -175,21 +158,22 @@ class _MapPageState extends State<MapPage> {
                       child: TextField(
                         controller: placeNameInputController,
                         decoration: InputDecoration(hintText: 'Street Name'),
-                        style:
-                        TextStyle(fontWeight: FontWeight.bold, fontSize: 40),
+                        style: TextStyle(
+                            fontWeight: FontWeight.bold, fontSize: 40),
                       ),
                     ),
-                    SizedBox(height: 10.0,),
+                    SizedBox(
+                      height: 10.0,
+                    ),
                     Padding(
                       padding: const EdgeInsets.symmetric(horizontal: 25.0),
                       child: TextField(
                         controller: cityInputController,
                         decoration: InputDecoration(hintText: 'City, Province'),
-                        style:
-                        TextStyle(fontWeight: FontWeight.w400, fontSize: 20),
+                        style: TextStyle(
+                            fontWeight: FontWeight.w400, fontSize: 20),
                       ),
                     ),
-
                     SizedBox(
                       height: 50.0,
                     ),
@@ -222,28 +206,34 @@ class _MapPageState extends State<MapPage> {
                       height: 50.0,
                     ),
                     IconButton(
-                      onPressed: () {
-                        addPrayertoDB(new Prayer(
+                      onPressed: () async {
+                        Navigator.pop(context, true);
+                        Prayer addPrayer = new Prayer(
                           id: null,
-                          note: name + " | " + addNoteController.text,
-                          datetime: DateTime.now().millisecondsSinceEpoch,
+                          notes: holdNotes,
+                          datetime: Timestamp.fromDate(DateTime.now()),
                           lat: position.latitude,
                           lng: position.longitude,
                           goal: int.parse(addGoalController.text),
                           placeName: placeNameInputController.text,
                           cityName: cityInputController.text,
-                        ));
-                        addNoteController.clear();
+                          total: 1,
+                        );
+                        DocumentReference prayerReference = await addPrayertoDB(addPrayer);
+                        addPrayer.reference = prayerReference;
                         setState(() {
                           markers.add(new Marker(
                             markerId: MarkerId(position.hashCode.toString()),
                             position: position,
                             onTap: () {
-                              onPrayerTap(position);
+                              _viewMarker(addPrayer);
                             },
                           ));
                         });
-                        Navigator.pop(context, true);
+                        addGoalController.clear();
+                        placeNameInputController.clear();
+                        cityInputController.clear();
+                        addNoteController.clear();
                       },
                       icon: Icon(Icons.check),
                       iconSize: 30.0,
@@ -257,29 +247,13 @@ class _MapPageState extends State<MapPage> {
         });
   }
 
-  void updatePrayer(LatLng position, String note){
-    String id = "";
-    Prayer temp = null;
-    _firestore.collection('prayers').getDocuments().then((snapshot){
-      for (DocumentSnapshot ds in snapshot.documents) {
-        if (ds.data['lat'] == position.latitude &&
-            ds.data['lng'] == position.longitude) {
-          id = ds.documentID.toString();
-          temp = Prayer.fromMap(ds.data);
-          temp.total = (temp.total+1);
-        }
-      }
+  void updatePrayer(Prayer updatedPrayer) {
 
-      CollectionReference v = _firestore.collection('prayers').document(id).collection("notes");
-      print(id);
-      _firestore.collection('prayers').document(id).updateData(temp.toMap());
-      v.add({'note':note});
+    updatedPrayer.reference.updateData(updatedPrayer.toJson());
 
-    });
   }
 
-  void _viewMarker(LatLng position, List<Prayer>curprayers){
-    print(curprayers);
+  void _viewMarker(Prayer currentPrayer) {
     showModalBottomSheet(
         context: context,
         isScrollControlled: true,
@@ -292,72 +266,70 @@ class _MapPageState extends State<MapPage> {
                     bottom: MediaQuery.of(context).viewInsets.bottom),
                 child: Column(
                   children: <Widget>[
-                    SizedBox(height: 40.0,),
-                    Text(
-                      '${curprayers[0].placeName}',
-                      style: TextStyle(
-                          fontWeight: FontWeight.bold,
-                          fontSize: 40
-                      ),
+                    SizedBox(
+                      height: 40.0,
                     ),
                     Text(
-                      '${curprayers[0].cityName}',
-                      style: TextStyle(
-                          fontWeight: FontWeight.w400,
-                          fontSize: 20
-                      ),
+                      '${currentPrayer.placeName}',
+                      style:
+                          TextStyle(fontWeight: FontWeight.bold, fontSize: 40),
                     ),
-                    SizedBox(height: 20.0,),
-
+                    Text(
+                      '${currentPrayer.cityName}',
+                      style:
+                          TextStyle(fontWeight: FontWeight.w400, fontSize: 20),
+                    ),
+                    SizedBox(
+                      height: 20.0,
+                    ),
                     GestureDetector(
                       onTap: null,
                       child: Container(
                         height: 200,
                         width: 300,
                         //color: Colors.grey[300],
-                        child: curprayers.length == 0 ? Center(child: Text("No Prayers Yet"),
-                        )
+                        child: currentPrayer.notes.length == 0
+                            ? Center(
+                                child: Text("No Prayers Yet"),
+                              )
                             : ListView.builder(
-                            itemCount: curprayers.length,
-                            itemBuilder: (context, index){
-                              note = curprayers[index].note.split("|");
-                              return Column(
-                                children: <Widget>[
-                                  Divider(),
-                                  ListTile(
-                                    title: Text(note[1]),
-                                    subtitle: Row(
-                                        children: [
-                                          Text(note[0]),
-                                          Spacer(),
-                                          Text('3/4/2020')
-                                        ],
-                                    ),
-                                  ),
-
-                                ],
-
-                              );
-                            }
-                        ),
+                                itemCount: currentPrayer.notes.length,
+                                itemBuilder: (context, index) {
+                                  note = currentPrayer.notes[index].split("|");
+                                  return Column(
+                                    children: <Widget>[
+                                      Divider(),
+                                      ListTile(
+                                        title: Text(note[1]),
+                                        subtitle: Row(
+                                          children: [
+                                            Text(note[0]),
+                                            Spacer(),
+                                            Text('3/4/2020')
+                                          ],
+                                        ),
+                                      ),
+                                    ],
+                                  );
+                                }),
                       ),
                     ),
-
-                    SizedBox(height: 20.0,),
-
+                    SizedBox(
+                      height: 20.0,
+                    ),
                     Row(
                       mainAxisAlignment: MainAxisAlignment.spaceAround,
                       children: <Widget>[
                         Spacer(),
                         Text(
-                          '${curprayers.length}',
+                          '${currentPrayer.notes.length}',
                           style: TextStyle(
                             fontSize: 30.0,
                             fontWeight: FontWeight.bold,
                           ),
                         ),
                         Text(
-                          '/${curprayers[0].goal} prayers',
+                          '/${currentPrayer.goal} prayers',
                           style: TextStyle(
                             fontSize: 20.0,
                             fontWeight: FontWeight.w600,
@@ -366,9 +338,9 @@ class _MapPageState extends State<MapPage> {
                         Spacer()
                       ],
                     ),
-
-                    SizedBox(height: 20.0,),
-
+                    SizedBox(
+                      height: 20.0,
+                    ),
                     Padding(
                       padding: EdgeInsets.symmetric(horizontal: 50.0),
                       child: TextField(
@@ -380,32 +352,33 @@ class _MapPageState extends State<MapPage> {
                         ),
                       ),
                     ),
-
-                    SizedBox(height: 50.0,),
-
+                    SizedBox(
+                      height: 50.0,
+                    ),
                     GestureDetector(
                       onTap: () {
-                        addPrayertoDB(new Prayer(
-                            id: null,
-                            note: name + "|" + addNoteController.text,
-                            datetime: DateTime.now().millisecondsSinceEpoch,
-                            lat: position.latitude,
-                            lng: position.longitude,
-                            goal: curprayers[0].goal,
-                        placeName: curprayers[0].placeName,
-                        cityName: curprayers[0].cityName));
-                        addNoteController.clear();
+                        print(currentPrayer);
                         Navigator.pop(context, true);
+                        currentPrayer.notes.add(name + "|" + addNoteController.text);
+                        currentPrayer.total++;
+                        updatePrayer(currentPrayer);
+                        addNoteController.clear();
                       },
                       child: Container(
                         height: 50.0,
                         width: 300.0,
                         decoration: BoxDecoration(
                             color: Colors.blue[500],
-                            borderRadius: BorderRadius.all(Radius.circular(30.0),)
-                        ),
-                        child: Center(child: Text('Pray for this Location',
-                          style: TextStyle(fontSize: 20.0, fontWeight: FontWeight.w600, color: Colors.white),
+                            borderRadius: BorderRadius.all(
+                              Radius.circular(30.0),
+                            )),
+                        child: Center(
+                            child: Text(
+                          'Pray for this Location',
+                          style: TextStyle(
+                              fontSize: 20.0,
+                              fontWeight: FontWeight.w600,
+                              color: Colors.white),
                         )),
                       ),
                     )
@@ -447,4 +420,3 @@ class _MapPageState extends State<MapPage> {
     _onAddMarker(position);
   }
 }
-
