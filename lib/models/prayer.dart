@@ -3,23 +3,21 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 
 class Prayer {
-  int id;
   int goal;
   double lat;
   double lng;
   String placeName;
   String cityName;
   List<dynamic> notes;
-  Timestamp datetime;
+  DateTime datetime;
   int total;
   DocumentReference reference;
 
-  Prayer({this.id, this.notes, this.datetime, this.lat, this.lng, this.goal, this.placeName, this.cityName, this.total, this.reference});
+  Prayer({this.notes, this.datetime, this.lat, this.lng, this.goal, this.placeName, this.cityName, this.total, this.reference});
 
   Map<String, dynamic> toJson() => _PrayerToJson(this);
 
   Map<String, dynamic> _PrayerToJson(Prayer instance) => <String, dynamic> {
-    "id": instance.id,
     "goal": instance.goal,
     "lat": instance.lat,
     "lng": instance.lng,
@@ -38,9 +36,8 @@ class Prayer {
 
   factory Prayer.fromJson(Map<String, dynamic> json) {
     return Prayer(
-      id: json["id"],
       notes: json["notes"],
-      datetime: json["datetime"] as Timestamp,
+      datetime: (json["datetime"] as Timestamp).toDate(),
       goal: json["goal"] as int,
       lat: json["lat"] as double,
       lng: json["lng"] as double,
@@ -52,7 +49,7 @@ class Prayer {
 
   @override
   String toString() {
-    return 'Prayer{id: $id, goal: $goal, lat: $lat, lng: $lng, notes: $notes, datetime $datetime, placeName: $placeName, cityName: $cityName}';
+    return 'Prayer{goal: $goal, lat: $lat, lng: $lng, notes: $notes, datetime $datetime, placeName: $placeName, cityName: $cityName}';
   }
 
 }

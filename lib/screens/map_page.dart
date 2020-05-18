@@ -1,8 +1,12 @@
+import 'dart:isolate';
+import 'dart:async';
+
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:permission_handler/permission_handler.dart';
+import 'package:project_prayer/models/LiveMarker.dart';
 import 'package:project_prayer/models/prayer.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 
@@ -19,6 +23,8 @@ class _MapPageState extends State<MapPage> {
   String name = "";
   TextEditingController placeNameInputController;
   TextEditingController cityInputController;
+  FirebaseUser user;
+  String liveMarkerID;
 
   @override
   void initState() {
@@ -28,19 +34,28 @@ class _MapPageState extends State<MapPage> {
     cityInputController = new TextEditingController();
     //placeNameInputController.text = 'Street Name';
     //cityInputController.text = 'City, Province';
-    getName();
+    liveMarkerID = 'none';
+
+    setUp();
+  }
+
+  void setUp() async {
+    await getUser();
 
     getCurrentLocation();
+    getLivePrayers();
     _setUpMap();
   }
 
-  void getName() async {
-    FirebaseUser user = await FirebaseAuth.instance.currentUser();
+  getUser() async {
+    user = await FirebaseAuth.instance.currentUser();
     DocumentSnapshot data =
         await Firestore.instance.collection('users').document(user.uid).get();
-    setState(() {
-      name = data["name"];
-    });
+    if (this.mounted) {
+      setState(() {
+        name = data["name"];
+      });
+    }
   }
 
   void _onMapCreated(GoogleMapController controller) {
@@ -49,9 +64,9 @@ class _MapPageState extends State<MapPage> {
 
   void _setUpMap() async {
     print("SET UP");
-    _firestore.collection('prayers').getDocuments().then((snapshot) {
-      for (DocumentSnapshot ds in snapshot.documents) {
-        print(ds);
+    _firestore.collection('prayers').snapshots().listen((event) {
+      for (DocumentSnapshot ds in event.documents) {
+        print("CHANGED:" + ds.data.toString());
         Prayer currentPrayer = Prayer.fromSnapshot(ds);
         double hue = 0;
         double percent = currentPrayer.total / currentPrayer.goal; //CHANGE
@@ -65,20 +80,61 @@ class _MapPageState extends State<MapPage> {
           hue = BitmapDescriptor.hueGreen;
         }
         print(currentPrayer);
-        setState(() {
-          markers.add(
-            new Marker(
-                markerId: MarkerId(
-                    LatLng(ds.data['lat'], ds.data['lng']).hashCode.toString()),
-                position: LatLng(ds.data['lat'], ds.data['lng']),
-                icon: BitmapDescriptor.defaultMarkerWithHue(hue),
-                onTap: () {
-                  _viewMarker(currentPrayer);
-                }),
-          );
-        });
+        for (int i = 0; i < markers.length; i++) {
+          if (markers[i].markerId.value == ds.documentID) {
+            markers.removeAt(i);
+            break;
+          }
+        }
+        if (this.mounted) {
+          setState(() {
+            markers.add(
+              new Marker(
+                  markerId: MarkerId(ds.documentID),
+                  position: LatLng(ds.data['lat'], ds.data['lng']),
+                  icon: BitmapDescriptor.defaultMarkerWithHue(hue),
+                  onTap: () {
+                    _viewMarker(currentPrayer);
+                  }),
+            );
+          });
+        }
       }
     });
+  }
+
+  void getLivePrayers() async {
+    //Listen for live prayers
+    _firestore.collection('live').snapshots().listen((event) async {
+      for (DocumentSnapshot ds in event.documents) {
+        print("LIVE CHANGES: " + ds.data.toString());
+        for (int i = 0; i < markers.length; i++) {
+          if (markers[i].markerId.value == ds.documentID + "LIVE") {
+            markers.removeAt(i);
+            break;
+          }
+        }
+        BitmapDescriptor markerIcon = await BitmapDescriptor.fromAssetImage(
+            ImageConfiguration(size: Size(100, 100)), 'assets/icon2.png');
+
+        if (this.mounted) {
+          setState(() {
+            markers.add(new Marker(
+                markerId: MarkerId(ds.documentID + "LIVE"),
+                icon: markerIcon,
+                position: LatLng(ds.data['lat'], ds.data['lng'])));
+          });
+        }
+      }
+    });
+
+    //Check if user is live
+    DocumentSnapshot liveMarkerSnapshot =
+        await _firestore.collection('live').document(user.uid).get();
+    print('SNAPSHOT' + liveMarkerSnapshot.toString());
+    if (liveMarkerSnapshot.data != null) {
+      liveMarkerID = liveMarkerSnapshot.data['markerID'];
+    }
   }
 
   void getCurrentLocation() async {
@@ -94,23 +150,38 @@ class _MapPageState extends State<MapPage> {
 
     if (status.isGranted) {
       print('wait');
-      Position pos = await Geolocator()
-          .getCurrentPosition(desiredAccuracy: LocationAccuracy.high);
-      setState(() {
-        currentLocation = pos;
+      Geolocator().getPositionStream().listen((event) async {
+        currentLocation = event;
+        DocumentSnapshot userSnapshot =
+            await _firestore.collection('users').document(user.uid).get();
+        print('DATA' + userSnapshot.data.toString());
+        if (userSnapshot.data['live']) {
+          updateUserLiveMarkerCoordinates(currentLocation.latitude, currentLocation.longitude);
+        }
+        for (int i = 0; i < markers.length; i++) {
+          if (markers[i].markerId.value == 'user location') {
+            print('remove');
+            markers.removeAt(i);
+            break;
+          }
+        }
+
+        if (!userSnapshot.data['live']) {
+          if (this.mounted) {
+            setState(() {
+              markers.add(
+                new Marker(
+                    markerId: MarkerId('user location'),
+                    position: LatLng(
+                        currentLocation.latitude, currentLocation.longitude),
+                    icon: BitmapDescriptor.defaultMarkerWithHue(
+                        BitmapDescriptor.hueBlue)),
+              );
+            });
+          }
+
+        }
       });
-      print(currentLocation);
-      markers.add(
-        new Marker(
-            markerId: MarkerId(
-                LatLng(currentLocation.latitude, currentLocation.longitude)
-                    .hashCode
-                    .toString()),
-            position:
-                LatLng(currentLocation.latitude, currentLocation.longitude),
-            icon: BitmapDescriptor.defaultMarkerWithHue(
-                BitmapDescriptor.hueBlue)),
-      );
     }
   }
 
@@ -119,6 +190,25 @@ class _MapPageState extends State<MapPage> {
   Future<DocumentReference> addPrayertoDB(Prayer prayer) async {
     CollectionReference v = _firestore.collection('prayers');
     return v.add(prayer.toJson());
+  }
+
+  Future addLiveMarkerToDB(LiveMarker liveMarker) async {
+    CollectionReference v = _firestore.collection('live');
+    return v.document(user.uid).setData(liveMarker.toJson());
+  }
+
+  updateLiveMarker(LiveMarker liveMarker) async {
+    _firestore
+        .collection('live')
+        .document(user.uid)
+        .updateData(liveMarker.toJson());
+  }
+
+  updateUserLiveMarkerCoordinates(double lat, double lng) {
+    _firestore.collection('live').document(user.uid).updateData({
+      'lat': lat,
+      'lng': lng,
+    });
   }
 
   @override
@@ -208,9 +298,8 @@ class _MapPageState extends State<MapPage> {
                       onPressed: () async {
                         Navigator.pop(context, true);
                         Prayer addPrayer = new Prayer(
-                          id: null,
                           notes: holdNotes,
-                          datetime: Timestamp.fromDate(DateTime.now()),
+                          datetime: DateTime.now(),
                           lat: position.latitude,
                           lng: position.longitude,
                           goal: int.parse(addGoalController.text),
@@ -218,17 +307,20 @@ class _MapPageState extends State<MapPage> {
                           cityName: cityInputController.text,
                           total: 1,
                         );
-                        DocumentReference prayerReference = await addPrayertoDB(addPrayer);
+                        DocumentReference prayerReference =
+                            await addPrayertoDB(addPrayer);
                         addPrayer.reference = prayerReference;
-                        setState(() {
-                          markers.add(new Marker(
-                            markerId: MarkerId(position.hashCode.toString()),
-                            position: position,
-                            onTap: () {
-                              _viewMarker(addPrayer);
-                            },
-                          ));
-                        });
+                        if (this.mounted) {
+                          setState(() {
+                            markers.add(new Marker(
+                              markerId: MarkerId(prayerReference.documentID),
+                              position: position,
+                              onTap: () {
+                                _viewMarker(addPrayer);
+                              },
+                            ));
+                          });
+                        }
                         addGoalController.clear();
                         placeNameInputController.clear();
                         cityInputController.clear();
@@ -247,9 +339,7 @@ class _MapPageState extends State<MapPage> {
   }
 
   void updatePrayer(Prayer updatedPrayer) {
-
     updatedPrayer.reference.updateData(updatedPrayer.toJson());
-
   }
 
   void _viewMarker(Prayer currentPrayer) {
@@ -349,31 +439,86 @@ class _MapPageState extends State<MapPage> {
                       height: 50.0,
                     ),
                     GestureDetector(
-                      onTap: () {
-                        print(currentPrayer);
-                        Navigator.pop(context, true);
-                        currentPrayer.notes.add(name + "|" + addNoteController.text);
-                        currentPrayer.total++;
-                        updatePrayer(currentPrayer);
-                        addNoteController.clear();
-                      },
-                      child: Container(
-                        height: 50.0,
-                        width: 300.0,
-                        decoration: BoxDecoration(
-                            color: Colors.blue[500],
-                            borderRadius: BorderRadius.all(
-                              Radius.circular(30.0),
-                            )),
-                        child: Center(
-                            child: Text(
-                          'Pray for this Location',
-                          style: TextStyle(
-                              fontSize: 20.0,
-                              fontWeight: FontWeight.w600,
-                              color: Colors.white),
-                        )),
-                      ),
+                      onTap: liveMarkerID != currentPrayer.reference.documentID
+                          ? () {
+                              print(currentPrayer);
+                              Navigator.pop(context, true);
+                              currentPrayer.notes
+                                  .add(name + "|" + addNoteController.text);
+                              currentPrayer.total++;
+                              updatePrayer(currentPrayer);
+                              LiveMarker newLiveMarker = LiveMarker(
+                                uid: user.uid,
+                                time: DateTime.now(),
+                                lat: currentLocation.latitude,
+                                lng: currentLocation.longitude,
+                                markerID: currentPrayer.reference.documentID,
+                              );
+                              addLiveMarkerToDB(newLiveMarker);
+                              liveMarkerID = currentPrayer.reference.documentID;
+                              _firestore
+                                  .collection('users')
+                                  .document(user.uid)
+                                  .updateData({
+                                'live': true,
+                              });
+                              print('added to live');
+                              start();
+                              addNoteController.clear();
+                            }
+                          : () {
+                              Navigator.pop(context, true);
+                              stop();
+
+                              //Use transaction to delete document?
+                              _firestore
+                                  .collection('live')
+                                  .document(user.uid)
+                                  .delete();
+
+                              liveMarkerID = 'none';
+                              _firestore
+                                  .collection('users')
+                                  .document(user.uid)
+                                  .updateData({
+                                'live': false,
+                              });
+                            },
+                      child: liveMarkerID != currentPrayer.reference.documentID
+                          ? Container(
+                              height: 50.0,
+                              width: 300.0,
+                              decoration: BoxDecoration(
+                                  color: Colors.blue[500],
+                                  borderRadius: BorderRadius.all(
+                                    Radius.circular(30.0),
+                                  )),
+                              child: Center(
+                                  child: Text(
+                                'Pray for this Location',
+                                style: TextStyle(
+                                    fontSize: 20.0,
+                                    fontWeight: FontWeight.w600,
+                                    color: Colors.white),
+                              )),
+                            )
+                          : Container(
+                              height: 50.0,
+                              width: 300.0,
+                              decoration: BoxDecoration(
+                                  color: Colors.orange[500],
+                                  borderRadius: BorderRadius.all(
+                                    Radius.circular(30.0),
+                                  )),
+                              child: Center(
+                                  child: Text(
+                                'Stop Praying',
+                                style: TextStyle(
+                                    fontSize: 20.0,
+                                    fontWeight: FontWeight.w600,
+                                    color: Colors.white),
+                              )),
+                            ),
                     )
                   ],
                 ),
@@ -392,6 +537,7 @@ class _MapPageState extends State<MapPage> {
         ),
       );
     } else {
+      print('building');
       return Scaffold(
         body: GoogleMap(
           onMapCreated: _onMapCreated,
@@ -411,5 +557,40 @@ class _MapPageState extends State<MapPage> {
   addMarker(LatLng position) {
     print(position);
     _onAddMarker(position);
+  }
+}
+
+Isolate isolate;
+
+void start() async {
+  print('STARTING');
+  ReceivePort receivePort = ReceivePort();
+  isolate = await Isolate.spawn(runTimer, receivePort.sendPort);
+  receivePort.listen((message) async {
+    print('removing');
+    FirebaseUser user = await FirebaseAuth.instance.currentUser();
+    Firestore.instance.collection('live').document(user.uid).delete();
+    Firestore.instance.collection('users').document(user.uid).updateData({
+      'live': false,
+    });
+    stop();
+  });
+}
+
+void runTimer(SendPort sendPort) {
+  int counter = 0;
+  Timer.periodic(new Duration(minutes: 10), (timer) {
+    counter++;
+    String message = 'sending ' + counter.toString();
+    print(message);
+    sendPort.send(message);
+  });
+}
+
+void stop() {
+  if (isolate != null) {
+    print('kill');
+    isolate.kill(priority: Isolate.immediate);
+    isolate = null;
   }
 }
