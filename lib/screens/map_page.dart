@@ -1,8 +1,11 @@
 import 'dart:isolate';
 import 'dart:async';
+import 'dart:ui' as ui;
 
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
+import 'package:flutter_svg/flutter_svg.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:permission_handler/permission_handler.dart';
@@ -26,6 +29,7 @@ class _MapPageState extends State<MapPage> {
   TextEditingController cityInputController;
   FirebaseUser user;
   String liveMarkerID;
+  BitmapDescriptor liveMarkerIcon;
 
   @override
   void initState() {
@@ -42,9 +46,11 @@ class _MapPageState extends State<MapPage> {
 
   void setUp() async {
     await getUser();
+    await getBitmapDescriptorFromSVG(context, 'assets/51.svg');
 
     getCurrentLocation();
     getLivePrayers();
+    setLiveTimer();
     _setUpMap();
   }
 
@@ -59,9 +65,124 @@ class _MapPageState extends State<MapPage> {
     }
   }
 
-  void _onMapCreated(GoogleMapController controller) {
-    mapController = controller;
+  getBitmapDescriptorFromSVG(BuildContext context, String assetName) async {
+    String svgString = await DefaultAssetBundle.of(context).loadString(assetName);
+    DrawableRoot svgDrawableRoot = await svg.fromSvgString(svgString, null);
+
+    MediaQueryData queryData = MediaQuery.of(context);
+    double devicePixelRatio = queryData.devicePixelRatio;
+    double width = 40 * devicePixelRatio;
+    double height = 40 * devicePixelRatio;
+
+    ui.Picture picture = svgDrawableRoot.toPicture(size: Size(width, height));
+
+    ui.Image image = await picture.toImage(width.round(), height.round());
+    ByteData bytes = await image.toByteData(format: ui.ImageByteFormat.png);
+    liveMarkerIcon = BitmapDescriptor.fromBytes(bytes.buffer.asUint8List());
   }
+
+  void getLivePrayers() async {
+    //Listen for live prayers
+    _firestore.collection('live').snapshots().listen((event) async {
+      for (DocumentSnapshot ds in event.documents) {
+        print("LIVE CHANGES: " + ds.data.toString());
+        for (int i = 0; i < markers.length; i++) {
+          if (markers[i].markerId.value == ds.documentID + "LIVE") {
+            markers.removeAt(i);
+            break;
+          }
+        }
+
+        if (this.mounted) {
+          setState(() {
+            markers.add(new Marker(
+                markerId: MarkerId(ds.documentID + "LIVE"),
+                icon: liveMarkerIcon,
+                position: LatLng(ds.data['lat'], ds.data['lng'])));
+          });
+        }
+      }
+    });
+
+    //Check if user is live
+    DocumentSnapshot liveMarkerSnapshot =
+    await _firestore.collection('live').document(user.uid).get();
+    print('SNAPSHOT' + liveMarkerSnapshot.toString());
+    if (liveMarkerSnapshot.data != null) {
+      liveMarkerID = liveMarkerSnapshot.data['markerID'];
+    }
+  }
+
+  setLiveTimer() {
+    Timer.periodic(new Duration(seconds: 20), (timer) async {
+      QuerySnapshot querySnapshot = await _firestore.collection('live').getDocuments();
+      for (int i = 0; i < markers.length; i++) {
+        if (markers[i].markerId.value.endsWith('LIVE')) {
+          markers.removeAt(i);
+        }
+      }
+      for (DocumentSnapshot liveMarkerSnapshot in querySnapshot.documents) {
+        LiveMarker receivedLiveMarker = LiveMarker.fromSnapshot(liveMarkerSnapshot);
+        markers.add(new Marker(
+          markerId: MarkerId(receivedLiveMarker.reference.documentID + 'LIVE'),
+          position: LatLng(receivedLiveMarker.lat, receivedLiveMarker.lng),
+          icon: liveMarkerIcon,
+        ));
+      }
+      setState(() {
+
+      });
+    });
+  }
+
+  void getCurrentLocation() async {
+    var status = await Permission.location.status;
+
+    if (status.isUndetermined || status.isDenied) {
+      Map<Permission, PermissionStatus> statues =
+      await [Permission.location].request();
+    }
+
+    status = await Permission.location.status;
+    print(status);
+
+    if (status.isGranted) {
+      print('wait');
+      Geolocator().getPositionStream().listen((event) async {
+        currentLocation = event;
+        DocumentSnapshot userSnapshot =
+        await _firestore.collection('users').document(user.uid).get();
+        print('DATA' + userSnapshot.data.toString());
+        if (userSnapshot.data['live']) {
+          updateUserLiveMarkerCoordinates(currentLocation.latitude, currentLocation.longitude);
+        }
+        for (int i = 0; i < markers.length; i++) {
+          if (markers[i].markerId.value == 'user location') {
+            print('remove');
+            markers.removeAt(i);
+            break;
+          }
+        }
+
+        if (!userSnapshot.data['live']) {
+          if (this.mounted) {
+            setState(() {
+              markers.add(
+                new Marker(
+                    markerId: MarkerId('user location'),
+                    position: LatLng(
+                        currentLocation.latitude, currentLocation.longitude),
+                    icon: BitmapDescriptor.defaultMarkerWithHue(
+                        BitmapDescriptor.hueBlue)),
+              );
+            });
+          }
+
+        }
+      });
+    }
+  }
+
 
   void _setUpMap() async {
     print("SET UP");
@@ -104,90 +225,11 @@ class _MapPageState extends State<MapPage> {
     });
   }
 
-  void getLivePrayers() async {
-    //Listen for live prayers
-    _firestore.collection('live').snapshots().listen((event) async {
-      for (DocumentSnapshot ds in event.documents) {
-        print("LIVE CHANGES: " + ds.data.toString());
-        for (int i = 0; i < markers.length; i++) {
-          if (markers[i].markerId.value == ds.documentID + "LIVE") {
-            markers.removeAt(i);
-            break;
-          }
-        }
-        BitmapDescriptor markerIcon = await BitmapDescriptor.fromAssetImage(
-            ImageConfiguration(size: Size(100, 100)), 'assets/icon2.png');
-
-        if (this.mounted) {
-          setState(() {
-            markers.add(new Marker(
-                markerId: MarkerId(ds.documentID + "LIVE"),
-                icon: markerIcon,
-                position: LatLng(ds.data['lat'], ds.data['lng'])));
-          });
-        }
-      }
-    });
-
-    //Check if user is live
-    DocumentSnapshot liveMarkerSnapshot =
-        await _firestore.collection('live').document(user.uid).get();
-    print('SNAPSHOT' + liveMarkerSnapshot.toString());
-    if (liveMarkerSnapshot.data != null) {
-      liveMarkerID = liveMarkerSnapshot.data['markerID'];
-    }
-  }
-
-  void getCurrentLocation() async {
-    var status = await Permission.location.status;
-
-    if (status.isUndetermined || status.isDenied) {
-      Map<Permission, PermissionStatus> statues =
-          await [Permission.location].request();
-    }
-
-    status = await Permission.location.status;
-    print(status);
-
-    if (status.isGranted) {
-      print('wait');
-      Geolocator().getPositionStream().listen((event) async {
-        currentLocation = event;
-        DocumentSnapshot userSnapshot =
-            await _firestore.collection('users').document(user.uid).get();
-        print('DATA' + userSnapshot.data.toString());
-        if (userSnapshot.data['live']) {
-          updateUserLiveMarkerCoordinates(currentLocation.latitude, currentLocation.longitude);
-        }
-        for (int i = 0; i < markers.length; i++) {
-          if (markers[i].markerId.value == 'user location') {
-            print('remove');
-            markers.removeAt(i);
-            break;
-          }
-        }
-
-        if (!userSnapshot.data['live']) {
-          if (this.mounted) {
-            setState(() {
-              markers.add(
-                new Marker(
-                    markerId: MarkerId('user location'),
-                    position: LatLng(
-                        currentLocation.latitude, currentLocation.longitude),
-                    icon: BitmapDescriptor.defaultMarkerWithHue(
-                        BitmapDescriptor.hueBlue)),
-              );
-            });
-          }
-
-        }
-      });
-    }
+  void _onMapCreated(GoogleMapController controller) {
+    mapController = controller;
   }
 
   //Database code
-
   Future<DocumentReference> addPrayertoDB(Prayer prayer) async {
     CollectionReference v = _firestore.collection('prayers');
     return v.add(prayer.toJson());
@@ -395,7 +437,7 @@ class _MapPageState extends State<MapPage> {
                                           children: [
                                             Text(note[0]),
                                             Spacer(),
-                                            Text('3/4/2020')
+                                            Text("[Working on adding dates]")
                                           ],
                                         ),
                                       ),
@@ -451,7 +493,7 @@ class _MapPageState extends State<MapPage> {
                               print(currentPrayer);
                               Navigator.pop(context, true);
                               currentPrayer.notes
-                                  .add(name + "|" + addNoteController.text);
+                                  .insert(0, name + "|" + addNoteController.text);
                               currentPrayer.total++;
                               updatePrayer(currentPrayer);
                               LiveMarker newLiveMarker = LiveMarker(
