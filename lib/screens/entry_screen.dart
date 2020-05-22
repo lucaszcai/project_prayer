@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
-import 'package:project_prayer/screens/login_screen.dart';
-import 'package:project_prayer/screens/signup_screen.dart';
+import 'package:adopt_a_street/screens/login_screen.dart';
+import 'package:adopt_a_street/screens/signup_screen.dart';
 
 class EntryScreen extends StatefulWidget {
   @override

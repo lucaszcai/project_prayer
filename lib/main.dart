@@ -1,9 +1,9 @@
 import 'package:flutter/material.dart';
-import 'package:project_prayer/screens/add_marker_screen.dart';
-import 'package:project_prayer/screens/entry_screen.dart';
-import 'package:project_prayer/screens/home_screen.dart';
-import 'package:project_prayer/screens/login_screen.dart';
-import 'package:project_prayer/screens/map_page.dart';
+import 'package:adopt_a_street/screens/add_marker_screen.dart';
+import 'package:adopt_a_street/screens/entry_screen.dart';
+import 'package:adopt_a_street/screens/home_screen.dart';
+import 'package:adopt_a_street/screens/login_screen.dart';
+import 'package:adopt_a_street/screens/map_page.dart';
 
 void main() => runApp(MyApp());
 

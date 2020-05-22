@@ -9,8 +9,8 @@ import 'package:flutter_svg/flutter_svg.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:permission_handler/permission_handler.dart';
-import 'package:project_prayer/models/LiveMarker.dart';
-import 'package:project_prayer/models/prayer.dart';
+import 'package:adopt_a_street/models/LiveMarker.dart';
+import 'package:adopt_a_street/models/prayer.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 
 class MapPage extends StatefulWidget {
