@@ -9,11 +9,12 @@ class Prayer {
   String placeName;
   String cityName;
   List<dynamic> notes;
+  List<dynamic> noteTimes;
   DateTime datetime;
   int total;
   DocumentReference reference;
 
-  Prayer({this.notes, this.datetime, this.lat, this.lng, this.goal, this.placeName, this.cityName, this.total, this.reference});
+  Prayer({this.notes, this.datetime, this.lat, this.lng, this.goal, this.placeName, this.cityName, this.total, this.noteTimes, this.reference});
 
   Map<String, dynamic> toJson() => _PrayerToJson(this);
 
@@ -26,6 +27,7 @@ class Prayer {
     "placeName": instance.placeName,
     "cityName": instance.cityName,
     "total": instance.total,
+    "noteTimes": instance.noteTimes,
   };
 
   factory Prayer.fromSnapshot(DocumentSnapshot snapshot) {
@@ -44,6 +46,7 @@ class Prayer {
       placeName: json["placeName"],
       cityName: json["cityName"],
       total: json["total"] as int,
+      noteTimes: json["noteTimes"],
     );
   }
 

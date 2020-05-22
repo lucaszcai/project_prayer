@@ -1,4 +1,4 @@
-package idea.project_prayer
+package idea.adopt_a_street
 
 import androidx.annotation.NonNull;
 import io.flutter.embedding.android.FlutterActivity

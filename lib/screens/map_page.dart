@@ -9,8 +9,8 @@ import 'package:flutter_svg/flutter_svg.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:permission_handler/permission_handler.dart';
-import 'package:project_prayer/models/LiveMarker.dart';
-import 'package:project_prayer/models/prayer.dart';
+import 'package:adopt_a_street/models/LiveMarker.dart';
+import 'package:adopt_a_street/models/prayer.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 
 class MapPage extends StatefulWidget {
@@ -85,7 +85,6 @@ class _MapPageState extends State<MapPage> {
     //Listen for live prayers
     _firestore.collection('live').snapshots().listen((event) async {
       for (DocumentSnapshot ds in event.documents) {
-        print("LIVE CHANGES: " + ds.data.toString());
         for (int i = 0; i < markers.length; i++) {
           if (markers[i].markerId.value == ds.documentID + "LIVE") {
             markers.removeAt(i);
@@ -107,7 +106,6 @@ class _MapPageState extends State<MapPage> {
     //Check if user is live
     DocumentSnapshot liveMarkerSnapshot =
     await _firestore.collection('live').document(user.uid).get();
-    print('SNAPSHOT' + liveMarkerSnapshot.toString());
     if (liveMarkerSnapshot.data != null) {
       liveMarkerID = liveMarkerSnapshot.data['markerID'];
     }
@@ -144,21 +142,17 @@ class _MapPageState extends State<MapPage> {
     }
 
     status = await Permission.location.status;
-    print(status);
 
     if (status.isGranted) {
-      print('wait');
       Geolocator().getPositionStream().listen((event) async {
         currentLocation = event;
         DocumentSnapshot userSnapshot =
         await _firestore.collection('users').document(user.uid).get();
-        print('DATA' + userSnapshot.data.toString());
         if (userSnapshot.data['live']) {
           updateUserLiveMarkerCoordinates(currentLocation.latitude, currentLocation.longitude);
         }
         for (int i = 0; i < markers.length; i++) {
           if (markers[i].markerId.value == 'user location') {
-            print('remove');
             markers.removeAt(i);
             break;
           }
@@ -185,10 +179,8 @@ class _MapPageState extends State<MapPage> {
 
 
   void _setUpMap() async {
-    print("SET UP");
     _firestore.collection('prayers').snapshots().listen((event) {
       for (DocumentSnapshot ds in event.documents) {
-        print("CHANGED:" + ds.data.toString());
         Prayer currentPrayer = Prayer.fromSnapshot(ds);
         double hue = 0;
         double percent = currentPrayer.total / currentPrayer.goal; //CHANGE
@@ -201,7 +193,6 @@ class _MapPageState extends State<MapPage> {
         } else {
           hue = BitmapDescriptor.hueGreen;
         }
-        print(currentPrayer);
         for (int i = 0; i < markers.length; i++) {
           if (markers[i].markerId.value == ds.documentID) {
             markers.removeAt(i);
@@ -269,7 +260,8 @@ class _MapPageState extends State<MapPage> {
 
   void _onAddMarker(LatLng position) {
     List<String> holdNotes = new List();
-    holdNotes.add(name + " | " + addNoteController.text);
+    List<Timestamp> holdNoteTimes = new List();
+    holdNoteTimes.add(Timestamp.fromDate(DateTime.now()));
     showModalBottomSheet(
         context: context,
         isScrollControlled: true,
@@ -340,6 +332,7 @@ class _MapPageState extends State<MapPage> {
                     IconButton(
                       onPressed: () async {
                         Navigator.pop(context, true);
+                        holdNotes.add(name + "|" + addNoteController.text);
                         Prayer addPrayer = new Prayer(
                           notes: holdNotes,
                           datetime: DateTime.now(),
@@ -349,21 +342,11 @@ class _MapPageState extends State<MapPage> {
                           placeName: placeNameInputController.text,
                           cityName: cityInputController.text,
                           total: 1,
+                          noteTimes: holdNoteTimes,
                         );
                         DocumentReference prayerReference =
                             await addPrayertoDB(addPrayer);
                         addPrayer.reference = prayerReference;
-                        if (this.mounted) {
-                          setState(() {
-                            markers.add(new Marker(
-                              markerId: MarkerId(prayerReference.documentID),
-                              position: position,
-                              onTap: () {
-                                _viewMarker(addPrayer);
-                              },
-                            ));
-                          });
-                        }
                         addGoalController.clear();
                         placeNameInputController.clear();
                         cityInputController.clear();
@@ -428,6 +411,7 @@ class _MapPageState extends State<MapPage> {
                                 itemCount: currentPrayer.notes.length,
                                 itemBuilder: (context, index) {
                                   note = currentPrayer.notes[index].split("|");
+                                  DateTime noteDate = (currentPrayer.noteTimes[index] as Timestamp).toDate();
                                   return Column(
                                     children: <Widget>[
                                       Divider(),
@@ -437,7 +421,7 @@ class _MapPageState extends State<MapPage> {
                                           children: [
                                             Text(note[0]),
                                             Spacer(),
-                                            Text("[Working on adding dates]")
+                                            Text('${noteDate.month}/${noteDate.day}/${noteDate.year}'),
                                           ],
                                         ),
                                       ),
@@ -490,11 +474,11 @@ class _MapPageState extends State<MapPage> {
                     GestureDetector(
                       onTap: liveMarkerID != currentPrayer.reference.documentID
                           ? () {
-                              print(currentPrayer);
                               Navigator.pop(context, true);
                               currentPrayer.notes
                                   .insert(0, name + "|" + addNoteController.text);
                               currentPrayer.total++;
+                              currentPrayer.noteTimes.insert(0, Timestamp.fromDate(DateTime.now()));
                               updatePrayer(currentPrayer);
                               LiveMarker newLiveMarker = LiveMarker(
                                 uid: user.uid,
@@ -511,7 +495,6 @@ class _MapPageState extends State<MapPage> {
                                   .updateData({
                                 'live': true,
                               });
-                              print('added to live');
                               start();
                               addNoteController.clear();
                             }
@@ -586,7 +569,6 @@ class _MapPageState extends State<MapPage> {
         ),
       );
     } else {
-      print('building');
       return Scaffold(
         body: GoogleMap(
           onMapCreated: _onMapCreated,
@@ -604,7 +586,6 @@ class _MapPageState extends State<MapPage> {
   }
 
   addMarker(LatLng position) {
-    print(position);
     _onAddMarker(position);
   }
 }
@@ -612,11 +593,9 @@ class _MapPageState extends State<MapPage> {
 Isolate isolate;
 
 void start() async {
-  print('STARTING');
   ReceivePort receivePort = ReceivePort();
   isolate = await Isolate.spawn(runTimer, receivePort.sendPort);
   receivePort.listen((message) async {
-    print('removing');
     FirebaseUser user = await FirebaseAuth.instance.currentUser();
     Firestore.instance.collection('live').document(user.uid).delete();
     Firestore.instance.collection('users').document(user.uid).updateData({
@@ -631,14 +610,12 @@ void runTimer(SendPort sendPort) {
   Timer.periodic(new Duration(minutes: 10), (timer) {
     counter++;
     String message = 'sending ' + counter.toString();
-    print(message);
     sendPort.send(message);
   });
 }
 
 void stop() {
   if (isolate != null) {
-    print('kill');
     isolate.kill(priority: Isolate.immediate);
     isolate = null;
   }

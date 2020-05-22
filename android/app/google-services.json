@@ -8,9 +8,9 @@
   "client": [
     {
       "client_info": {
-        "mobilesdk_app_id": "1:683842000764:android:739299336661f90813f6f9",
+        "mobilesdk_app_id": "1:683842000764:android:b8ecdb9133b5118913f6f9",
         "android_client_info": {
-          "package_name": "idea.project_prayer"
+          "package_name": "idea.adopt_a_street"
         }
       },
       "oauth_client": [
@@ -32,10 +32,10 @@
               "client_type": 3
             },
             {
-              "client_id": "683842000764-r2j397lhq2s8ijt98d5crrf9rfdti62b.apps.googleusercontent.com",
+              "client_id": "683842000764-d7q6k3qmt2p23288vdk6vhblo93s5ktn.apps.googleusercontent.com",
               "client_type": 2,
               "ios_info": {
-                "bundle_id": "idea.projectPrayer"
+                "bundle_id": "idea.adoptAStreet"
               }
             }
           ]

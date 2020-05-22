@@ -1,6 +1,6 @@
-# project_prayer
+# adopt_a_street
 
-prayer app for global church hack
+Prayer app for the Adopt a Street campaign
 
 ## Getting Started
 

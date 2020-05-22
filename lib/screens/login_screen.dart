@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
-import 'package:project_prayer/screens/home_screen.dart';
-import 'package:project_prayer/screens/map_page.dart';
-import 'package:project_prayer/screens/signup_screen.dart';
+import 'package:adopt_a_street/screens/home_screen.dart';
+import 'package:adopt_a_street/screens/map_page.dart';
+import 'package:adopt_a_street/screens/signup_screen.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 
