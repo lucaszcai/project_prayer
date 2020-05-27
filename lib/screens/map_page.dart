@@ -12,11 +12,13 @@ import 'package:permission_handler/permission_handler.dart';
 import 'package:adopt_a_street/models/LiveMarker.dart';
 import 'package:adopt_a_street/models/prayer.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'settings_page.dart';
+import 'package:adopt_a_street/models/User.dart';
+import 'package:adopt_a_street/helpers/live_isolate.dart';
 
 class MapPage extends StatefulWidget {
   @override
   _MapPageState createState() => _MapPageState();
-
 }
 
 class _MapPageState extends State<MapPage> {
@@ -24,10 +26,9 @@ class _MapPageState extends State<MapPage> {
   Position currentLocation;
   List<Marker> markers;
   final Firestore _firestore = Firestore.instance;
-  String name = "";
   TextEditingController placeNameInputController;
   TextEditingController cityInputController;
-  FirebaseUser user;
+  User currentUser;
   String liveMarkerID;
   BitmapDescriptor liveMarkerIcon;
 
@@ -55,18 +56,21 @@ class _MapPageState extends State<MapPage> {
   }
 
   getUser() async {
-    user = await FirebaseAuth.instance.currentUser();
-    DocumentSnapshot data =
-        await Firestore.instance.collection('users').document(user.uid).get();
+    FirebaseUser getUser = await FirebaseAuth.instance.currentUser();
+    DocumentSnapshot userData = await Firestore.instance
+        .collection('users')
+        .document(getUser.uid)
+        .get();
     if (this.mounted) {
       setState(() {
-        name = data["name"];
+        currentUser = User.fromSnapshot(userData);
       });
     }
   }
 
   getBitmapDescriptorFromSVG(BuildContext context, String assetName) async {
-    String svgString = await DefaultAssetBundle.of(context).loadString(assetName);
+    String svgString =
+        await DefaultAssetBundle.of(context).loadString(assetName);
     DrawableRoot svgDrawableRoot = await svg.fromSvgString(svgString, null);
 
     MediaQueryData queryData = MediaQuery.of(context);
@@ -105,7 +109,7 @@ class _MapPageState extends State<MapPage> {
 
     //Check if user is live
     DocumentSnapshot liveMarkerSnapshot =
-    await _firestore.collection('live').document(user.uid).get();
+        await _firestore.collection('live').document(currentUser.uid).get();
     if (liveMarkerSnapshot.data != null) {
       liveMarkerID = liveMarkerSnapshot.data['markerID'];
     }
@@ -113,23 +117,23 @@ class _MapPageState extends State<MapPage> {
 
   setLiveTimer() {
     Timer.periodic(new Duration(seconds: 20), (timer) async {
-      QuerySnapshot querySnapshot = await _firestore.collection('live').getDocuments();
+      QuerySnapshot querySnapshot =
+          await _firestore.collection('live').getDocuments();
       for (int i = 0; i < markers.length; i++) {
         if (markers[i].markerId.value.endsWith('LIVE')) {
           markers.removeAt(i);
         }
       }
       for (DocumentSnapshot liveMarkerSnapshot in querySnapshot.documents) {
-        LiveMarker receivedLiveMarker = LiveMarker.fromSnapshot(liveMarkerSnapshot);
+        LiveMarker receivedLiveMarker =
+            LiveMarker.fromSnapshot(liveMarkerSnapshot);
         markers.add(new Marker(
           markerId: MarkerId(receivedLiveMarker.reference.documentID + 'LIVE'),
           position: LatLng(receivedLiveMarker.lat, receivedLiveMarker.lng),
           icon: liveMarkerIcon,
         ));
       }
-      setState(() {
-
-      });
+      setState(() {});
     });
   }
 
@@ -138,45 +142,53 @@ class _MapPageState extends State<MapPage> {
 
     if (status.isUndetermined || status.isDenied) {
       Map<Permission, PermissionStatus> statues =
-      await [Permission.location].request();
+          await [Permission.location].request();
     }
 
     status = await Permission.location.status;
 
     if (status.isGranted) {
       Geolocator().getPositionStream().listen((event) async {
-        currentLocation = event;
-        DocumentSnapshot userSnapshot =
-        await _firestore.collection('users').document(user.uid).get();
-        if (userSnapshot.data['live']) {
-          updateUserLiveMarkerCoordinates(currentLocation.latitude, currentLocation.longitude);
+        double travelled = 10;
+        if (currentLocation != null) {
+          await Geolocator().distanceBetween(currentLocation.latitude,
+              currentLocation.longitude, event.latitude, event.longitude);
         }
-        for (int i = 0; i < markers.length; i++) {
-          if (markers[i].markerId.value == 'user location') {
-            markers.removeAt(i);
-            break;
+        if (travelled > 3) {
+          currentLocation = event;
+          DocumentSnapshot userSnapshot = await _firestore
+              .collection('users')
+              .document(currentUser.uid)
+              .get();
+          if (userSnapshot.data['live']) {
+            updateUserLiveMarkerCoordinates(
+                currentLocation.latitude, currentLocation.longitude);
           }
-        }
-
-        if (!userSnapshot.data['live']) {
-          if (this.mounted) {
-            setState(() {
-              markers.add(
-                new Marker(
-                    markerId: MarkerId('user location'),
-                    position: LatLng(
-                        currentLocation.latitude, currentLocation.longitude),
-                    icon: BitmapDescriptor.defaultMarkerWithHue(
-                        BitmapDescriptor.hueBlue)),
-              );
-            });
+          for (int i = 0; i < markers.length; i++) {
+            if (markers[i].markerId.value == 'user location') {
+              markers.removeAt(i);
+              break;
+            }
           }
 
+          if (!userSnapshot.data['live']) {
+            if (this.mounted) {
+              setState(() {
+                markers.add(
+                  new Marker(
+                      markerId: MarkerId('user location'),
+                      position: LatLng(
+                          currentLocation.latitude, currentLocation.longitude),
+                      icon: BitmapDescriptor.defaultMarkerWithHue(
+                          BitmapDescriptor.hueBlue)),
+                );
+              });
+            }
+          }
         }
       });
     }
   }
-
 
   void _setUpMap() async {
     _firestore.collection('prayers').snapshots().listen((event) {
@@ -228,18 +240,18 @@ class _MapPageState extends State<MapPage> {
 
   Future addLiveMarkerToDB(LiveMarker liveMarker) async {
     CollectionReference v = _firestore.collection('live');
-    return v.document(user.uid).setData(liveMarker.toJson());
+    return v.document(currentUser.uid).setData(liveMarker.toJson());
   }
 
   updateLiveMarker(LiveMarker liveMarker) async {
     _firestore
         .collection('live')
-        .document(user.uid)
+        .document(currentUser.uid)
         .updateData(liveMarker.toJson());
   }
 
   updateUserLiveMarkerCoordinates(double lat, double lng) {
-    _firestore.collection('live').document(user.uid).updateData({
+    _firestore.collection('live').document(currentUser.uid).updateData({
       'lat': lat,
       'lng': lng,
     });
@@ -284,6 +296,11 @@ class _MapPageState extends State<MapPage> {
                         decoration: InputDecoration(hintText: 'Street Name'),
                         style: TextStyle(
                             fontWeight: FontWeight.bold, fontSize: 40),
+                        onChanged: (value) {
+                          if (value == '') {
+                            placeNameInputController.clear();
+                          }
+                        },
                       ),
                     ),
                     SizedBox(
@@ -332,7 +349,8 @@ class _MapPageState extends State<MapPage> {
                     IconButton(
                       onPressed: () async {
                         Navigator.pop(context, true);
-                        holdNotes.add(name + "|" + addNoteController.text);
+                        holdNotes.add(
+                            currentUser.name + "|" + addNoteController.text);
                         Prayer addPrayer = new Prayer(
                           notes: holdNotes,
                           datetime: DateTime.now(),
@@ -411,7 +429,9 @@ class _MapPageState extends State<MapPage> {
                                 itemCount: currentPrayer.notes.length,
                                 itemBuilder: (context, index) {
                                   note = currentPrayer.notes[index].split("|");
-                                  DateTime noteDate = (currentPrayer.noteTimes[index] as Timestamp).toDate();
+                                  DateTime noteDate = (currentPrayer
+                                          .noteTimes[index] as Timestamp)
+                                      .toDate();
                                   return Column(
                                     children: <Widget>[
                                       Divider(),
@@ -421,7 +441,8 @@ class _MapPageState extends State<MapPage> {
                                           children: [
                                             Text(note[0]),
                                             Spacer(),
-                                            Text('${noteDate.month}/${noteDate.day}/${noteDate.year}'),
+                                            Text(
+                                                '${noteDate.month}/${noteDate.day}/${noteDate.year}'),
                                           ],
                                         ),
                                       ),
@@ -475,13 +496,18 @@ class _MapPageState extends State<MapPage> {
                       onTap: liveMarkerID != currentPrayer.reference.documentID
                           ? () {
                               Navigator.pop(context, true);
-                              currentPrayer.notes
-                                  .insert(0, name + "|" + addNoteController.text);
+                              currentPrayer.notes.insert(
+                                  0,
+                                  currentUser.name +
+                                      "|" +
+                                      addNoteController.text);
                               currentPrayer.total++;
-                              currentPrayer.noteTimes.insert(0, Timestamp.fromDate(DateTime.now()));
+                              currentPrayer.noteTimes.insert(
+                                  0, Timestamp.fromDate(DateTime.now()));
                               updatePrayer(currentPrayer);
+                              if (currentUser.showLive) {}
                               LiveMarker newLiveMarker = LiveMarker(
-                                uid: user.uid,
+                                uid: currentUser.uid,
                                 time: DateTime.now(),
                                 lat: currentLocation.latitude,
                                 lng: currentLocation.longitude,
@@ -491,7 +517,7 @@ class _MapPageState extends State<MapPage> {
                               liveMarkerID = currentPrayer.reference.documentID;
                               _firestore
                                   .collection('users')
-                                  .document(user.uid)
+                                  .document(currentUser.uid)
                                   .updateData({
                                 'live': true,
                               });
@@ -505,13 +531,13 @@ class _MapPageState extends State<MapPage> {
                               //Use transaction to delete document?
                               _firestore
                                   .collection('live')
-                                  .document(user.uid)
+                                  .document(currentUser.uid)
                                   .delete();
 
                               liveMarkerID = 'none';
                               _firestore
                                   .collection('users')
-                                  .document(user.uid)
+                                  .document(currentUser.uid)
                                   .updateData({
                                 'live': false,
                               });
@@ -570,16 +596,41 @@ class _MapPageState extends State<MapPage> {
       );
     } else {
       return Scaffold(
-        body: GoogleMap(
-          onMapCreated: _onMapCreated,
-          initialCameraPosition: CameraPosition(
-            target: LatLng(currentLocation.latitude, currentLocation.longitude),
-            zoom: 12,
-          ),
-          onTap: (position) {
-            addMarker(position);
-          },
-          markers: markers.toSet(),
+        body: Stack(
+          children: [
+            GoogleMap(
+              onMapCreated: _onMapCreated,
+              initialCameraPosition: CameraPosition(
+                target:
+                    LatLng(currentLocation.latitude, currentLocation.longitude),
+                zoom: 12,
+              ),
+              onTap: (position) {
+                addMarker(position);
+              },
+              markers: markers.toSet(),
+            ),
+            Positioned(
+              top: MediaQuery.of(context).size.height / 40,
+              right: MediaQuery.of(context).size.width / 40,
+              child: IconButton(
+                icon: Icon(Icons.settings),
+                onPressed: () async {
+                  await Navigator.push(
+                    context,
+                    MaterialPageRoute(builder: (context) => SettingsPage()),
+                  );
+                  DocumentSnapshot updatedUser = await Firestore.instance
+                      .collection('users')
+                      .document(currentUser.uid)
+                      .get();
+                  setState(() {
+                    currentUser = User.fromSnapshot(updatedUser);
+                  });
+                },
+              ),
+            )
+          ],
         ),
       );
     }
@@ -587,36 +638,5 @@ class _MapPageState extends State<MapPage> {
 
   addMarker(LatLng position) {
     _onAddMarker(position);
-  }
-}
-
-Isolate isolate;
-
-void start() async {
-  ReceivePort receivePort = ReceivePort();
-  isolate = await Isolate.spawn(runTimer, receivePort.sendPort);
-  receivePort.listen((message) async {
-    FirebaseUser user = await FirebaseAuth.instance.currentUser();
-    Firestore.instance.collection('live').document(user.uid).delete();
-    Firestore.instance.collection('users').document(user.uid).updateData({
-      'live': false,
-    });
-    stop();
-  });
-}
-
-void runTimer(SendPort sendPort) {
-  int counter = 0;
-  Timer.periodic(new Duration(minutes: 10), (timer) {
-    counter++;
-    String message = 'sending ' + counter.toString();
-    sendPort.send(message);
-  });
-}
-
-void stop() {
-  if (isolate != null) {
-    isolate.kill(priority: Isolate.immediate);
-    isolate = null;
   }
 }

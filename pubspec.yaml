@@ -31,6 +31,7 @@ dependencies:
   curved_navigation_bar: ^0.3.2
   http: ^0.12.1
   flutter_svg: ^0.17.4
+  numberpicker: ^1.2.0
 
 dev_dependencies:
   flutter_test:
