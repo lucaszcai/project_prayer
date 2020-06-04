@@ -9,10 +9,11 @@ class User {
   int liveSeconds;
   bool showLive;
   String uid;
+  String liveMarkerID;
 
   DocumentReference reference;
 
-  User({this.email, this.live, this.name, this.liveMinutes, this.liveSeconds, this.showLive, this.uid, this.reference});
+  User({this.email, this.live, this.name, this.liveMinutes, this.liveSeconds, this.showLive, this.uid, this.liveMarkerID, this.reference});
 
   factory User.fromSnapshot(DocumentSnapshot snapshot) {
     User user = User.fromJson(snapshot.data);
@@ -29,6 +30,7 @@ class User {
       liveSeconds: json['liveSeconds'] as int,
       showLive: json['showLive'] as bool,
       uid: json['uid'] as String,
+      liveMarkerID: json['liveMarkerID'] as String,
     );
   }
 
@@ -42,5 +44,6 @@ class User {
     'liveSeconds': instance.liveSeconds,
     'showLive': instance.showLive,
     'uid': instance.uid,
+    'liveMarkerID': instance.liveMarkerID,
   };
 }

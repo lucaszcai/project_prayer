@@ -1,4 +1,3 @@
-import 'dart:isolate';
 import 'dart:async';
 import 'dart:ui' as ui;
 
@@ -29,7 +28,6 @@ class _MapPageState extends State<MapPage> {
   TextEditingController placeNameInputController;
   TextEditingController cityInputController;
   User currentUser;
-  String liveMarkerID;
   BitmapDescriptor liveMarkerIcon;
 
   @override
@@ -40,7 +38,6 @@ class _MapPageState extends State<MapPage> {
     cityInputController = new TextEditingController();
     //placeNameInputController.text = 'Street Name';
     //cityInputController.text = 'City, Province';
-    liveMarkerID = 'none';
 
     setUp();
   }
@@ -57,15 +54,17 @@ class _MapPageState extends State<MapPage> {
 
   getUser() async {
     FirebaseUser getUser = await FirebaseAuth.instance.currentUser();
-    DocumentSnapshot userData = await Firestore.instance
+    Firestore.instance
         .collection('users')
         .document(getUser.uid)
-        .get();
-    if (this.mounted) {
-      setState(() {
-        currentUser = User.fromSnapshot(userData);
-      });
-    }
+        .snapshots().listen((event) {
+          print(event.data);
+      if (this.mounted) {
+        setState(() {
+          currentUser = User.fromSnapshot(event);
+        });
+      }
+    });
   }
 
   getBitmapDescriptorFromSVG(BuildContext context, String assetName) async {
@@ -106,13 +105,6 @@ class _MapPageState extends State<MapPage> {
         }
       }
     });
-
-    //Check if user is live
-    DocumentSnapshot liveMarkerSnapshot =
-        await _firestore.collection('live').document(currentUser.uid).get();
-    if (liveMarkerSnapshot.data != null) {
-      liveMarkerID = liveMarkerSnapshot.data['markerID'];
-    }
   }
 
   setLiveTimer() {
@@ -133,7 +125,9 @@ class _MapPageState extends State<MapPage> {
           icon: liveMarkerIcon,
         ));
       }
-      setState(() {});
+      if (this.mounted) {
+        setState(() {});
+      }
     });
   }
 
@@ -156,13 +150,30 @@ class _MapPageState extends State<MapPage> {
         }
         if (travelled > 3) {
           currentLocation = event;
-          DocumentSnapshot userSnapshot = await _firestore
-              .collection('users')
-              .document(currentUser.uid)
-              .get();
-          if (userSnapshot.data['live']) {
-            updateUserLiveMarkerCoordinates(
-                currentLocation.latitude, currentLocation.longitude);
+          if (currentUser.live) {
+            if (currentUser.showLive) {
+              print('update show live');
+              updateUserLiveMarkerCoordinates(
+                  currentLocation.latitude, currentLocation.longitude);
+            }
+            else {
+              print('update don\'t show live');
+              for (int i = 0; i < markers.length; i++) {
+                if (markers[i].markerId.value == currentUser.uid + 'LIVE') {
+                  markers.removeAt(i);
+                  break;
+                }
+              }
+              if (this.mounted) {
+                setState(() {
+                  markers.add(new Marker(
+                    markerId: MarkerId(currentUser.uid + 'LIVE'),
+                    position: LatLng(currentLocation.latitude, currentLocation.longitude),
+                    icon: liveMarkerIcon,
+                  ));
+                });
+              }
+            }
           }
           for (int i = 0; i < markers.length; i++) {
             if (markers[i].markerId.value == 'user location') {
@@ -171,7 +182,8 @@ class _MapPageState extends State<MapPage> {
             }
           }
 
-          if (!userSnapshot.data['live']) {
+          if (!currentUser.live) {
+            print('update not live');
             if (this.mounted) {
               setState(() {
                 markers.add(
@@ -493,7 +505,7 @@ class _MapPageState extends State<MapPage> {
                       height: 50.0,
                     ),
                     GestureDetector(
-                      onTap: liveMarkerID != currentPrayer.reference.documentID
+                      onTap: currentUser.liveMarkerID != currentPrayer.reference.documentID
                           ? () {
                               Navigator.pop(context, true);
                               currentPrayer.notes.insert(
@@ -501,48 +513,56 @@ class _MapPageState extends State<MapPage> {
                                   currentUser.name +
                                       "|" +
                                       addNoteController.text);
-                              currentPrayer.total++;
                               currentPrayer.noteTimes.insert(
                                   0, Timestamp.fromDate(DateTime.now()));
                               updatePrayer(currentPrayer);
-                              if (currentUser.showLive) {}
-                              LiveMarker newLiveMarker = LiveMarker(
-                                uid: currentUser.uid,
-                                time: DateTime.now(),
-                                lat: currentLocation.latitude,
-                                lng: currentLocation.longitude,
-                                markerID: currentPrayer.reference.documentID,
-                              );
-                              addLiveMarkerToDB(newLiveMarker);
-                              liveMarkerID = currentPrayer.reference.documentID;
-                              _firestore
-                                  .collection('users')
-                                  .document(currentUser.uid)
-                                  .updateData({
-                                'live': true,
-                              });
-                              start();
+                              if (currentUser.showLive) {
+                                LiveMarker newLiveMarker = LiveMarker(
+                                  uid: currentUser.uid,
+                                  time: DateTime.now(),
+                                  lat: currentLocation.latitude,
+                                  lng: currentLocation.longitude,
+                                  markerID: currentPrayer.reference.documentID,
+                                );
+                                addLiveMarkerToDB(newLiveMarker);
+                                _firestore
+                                    .collection('users')
+                                    .document(currentUser.uid)
+                                    .updateData({
+                                  'live': true,
+                                  'liveMarkerID': currentPrayer.reference.documentID,
+                                });
+                                start();
+                              }
+                              else {
+                                currentUser.reference.updateData({
+                                  'live': true,
+                                  'liveMarkerID': currentPrayer.reference.documentID,
+                                });
+                                start();
+                              }
+
                               addNoteController.clear();
                             }
                           : () {
                               Navigator.pop(context, true);
                               stop();
 
-                              //Use transaction to delete document?
-                              _firestore
-                                  .collection('live')
-                                  .document(currentUser.uid)
-                                  .delete();
-
-                              liveMarkerID = 'none';
+                              if (currentUser.showLive) {
+                                _firestore
+                                    .collection('live')
+                                    .document(currentUser.uid)
+                                    .delete();
+                              }
                               _firestore
                                   .collection('users')
                                   .document(currentUser.uid)
                                   .updateData({
                                 'live': false,
+                                'liveMarkerID': 'none',
                               });
                             },
-                      child: liveMarkerID != currentPrayer.reference.documentID
+                      child: currentUser.liveMarkerID != currentPrayer.reference.documentID
                           ? Container(
                               height: 50.0,
                               width: 300.0,
@@ -620,13 +640,6 @@ class _MapPageState extends State<MapPage> {
                     context,
                     MaterialPageRoute(builder: (context) => SettingsPage()),
                   );
-                  DocumentSnapshot updatedUser = await Firestore.instance
-                      .collection('users')
-                      .document(currentUser.uid)
-                      .get();
-                  setState(() {
-                    currentUser = User.fromSnapshot(updatedUser);
-                  });
                 },
               ),
             )

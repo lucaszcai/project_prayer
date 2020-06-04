@@ -18,9 +18,12 @@ void start() async {
       print('sent!');
     }
     else if (message.toString() == 'done!') {
-      Firestore.instance.collection('live').document(currentUser.uid).delete();
+      if (currentUser.showLive) {
+        Firestore.instance.collection('live').document(currentUser.uid).delete();
+      }
       Firestore.instance.collection('users').document(currentUser.uid).updateData({
         'live': false,
+        'liveMarkerID': 'none',
       });
       stop();
     }

@@ -29,9 +29,11 @@ class _SettingsPageState extends State<SettingsPage> {
         .snapshots()
         .listen((updatedUser) {
       print('new');
-      setState(() {
-        currentUser = User.fromSnapshot(updatedUser);
-      });
+      if (this.mounted) {
+        setState(() {
+          currentUser = User.fromSnapshot(updatedUser);
+        });
+      }
     });
   }
 
