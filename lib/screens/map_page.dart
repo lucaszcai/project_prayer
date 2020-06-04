@@ -29,6 +29,7 @@ class _MapPageState extends State<MapPage> {
   TextEditingController cityInputController;
   User currentUser;
   BitmapDescriptor liveMarkerIcon;
+  String liveMarkerID;
 
   @override
   void initState() {
@@ -60,8 +61,11 @@ class _MapPageState extends State<MapPage> {
         .snapshots().listen((event) {
           print(event.data);
       if (this.mounted) {
+        print('update: '+ event.data.toString());
         setState(() {
           currentUser = User.fromSnapshot(event);
+          liveMarkerID = currentUser.liveMarkerID;
+          print('am i live? ' + currentUser.live.toString());
         });
       }
     });
@@ -152,12 +156,10 @@ class _MapPageState extends State<MapPage> {
           currentLocation = event;
           if (currentUser.live) {
             if (currentUser.showLive) {
-              print('update show live');
               updateUserLiveMarkerCoordinates(
                   currentLocation.latitude, currentLocation.longitude);
             }
             else {
-              print('update don\'t show live');
               for (int i = 0; i < markers.length; i++) {
                 if (markers[i].markerId.value == currentUser.uid + 'LIVE') {
                   markers.removeAt(i);
@@ -183,7 +185,6 @@ class _MapPageState extends State<MapPage> {
           }
 
           if (!currentUser.live) {
-            print('update not live');
             if (this.mounted) {
               setState(() {
                 markers.add(
@@ -505,8 +506,9 @@ class _MapPageState extends State<MapPage> {
                       height: 50.0,
                     ),
                     GestureDetector(
-                      onTap: currentUser.liveMarkerID != currentPrayer.reference.documentID
+                      onTap: liveMarkerID != currentPrayer.reference.documentID
                           ? () {
+                        stop();
                               Navigator.pop(context, true);
                               currentPrayer.notes.insert(
                                   0,
@@ -562,7 +564,7 @@ class _MapPageState extends State<MapPage> {
                                 'liveMarkerID': 'none',
                               });
                             },
-                      child: currentUser.liveMarkerID != currentPrayer.reference.documentID
+                      child: liveMarkerID != currentPrayer.reference.documentID
                           ? Container(
                               height: 50.0,
                               width: 300.0,

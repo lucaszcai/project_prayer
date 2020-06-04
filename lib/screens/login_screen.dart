@@ -1,7 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:adopt_a_street/screens/home_screen.dart';
-import 'package:adopt_a_street/screens/map_page.dart';
-import 'package:adopt_a_street/screens/signup_screen.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 
@@ -15,11 +13,13 @@ class _LoginScreenState extends State<LoginScreen> {
   TextEditingController emailInputController;
   TextEditingController passwordInputController;
   final GlobalKey<FormState> _loginFormKey = new GlobalKey();
+  String errorText;
 
   @override
   void initState() {
     emailInputController = new TextEditingController();
     passwordInputController = new TextEditingController();
+    errorText = null;
   }
 
   String emailValidator(String value) {
@@ -32,7 +32,6 @@ class _LoginScreenState extends State<LoginScreen> {
       return null;
     }
   }
-
 
   @override
   Widget build(BuildContext context) {
@@ -70,17 +69,19 @@ class _LoginScreenState extends State<LoginScreen> {
                   child: Form(
                     key: _loginFormKey,
                     child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
                       children: <Widget>[
                         TextFormField(
                           controller: emailInputController,
                           decoration: InputDecoration(
-                              labelText: 'EMAIL',
-                              labelStyle: TextStyle(
-                                  fontFamily: 'Montserrat',
-                                  fontWeight: FontWeight.bold,
-                                  color: Colors.grey),
-                              focusedBorder: UnderlineInputBorder(
-                                  borderSide: BorderSide(color: Colors.blue))),
+                            labelText: 'EMAIL',
+                            labelStyle: TextStyle(
+                                fontFamily: 'Montserrat',
+                                fontWeight: FontWeight.bold,
+                                color: Colors.grey),
+                            focusedBorder: UnderlineInputBorder(
+                                borderSide: BorderSide(color: Colors.blue)),
+                          ),
                           validator: emailValidator,
                         ),
                         SizedBox(height: 20.0),
@@ -96,30 +97,62 @@ class _LoginScreenState extends State<LoginScreen> {
                                   borderSide: BorderSide(color: Colors.blue))),
                           obscureText: true,
                         ),
+                        errorText != null
+                            ? Padding(
+                                padding: EdgeInsets.fromLTRB(0, 10, 0, 0),
+                                child: Text(
+                                  errorText,
+                                  style: TextStyle(
+                                    color: Colors.red,
+                                    fontSize: 10.0,
+                                  ),
+                                  textAlign: TextAlign.left,
+                                ))
+                            : SizedBox.shrink(),
                         SizedBox(height: 40.0),
-                        GestureDetector(
-                          onTap: () {
-                            if (_loginFormKey.currentState.validate()) {
-                              FirebaseAuth.instance.signInWithEmailAndPassword(email: emailInputController.text, password: passwordInputController.text).then(
-                                      (currentUser) {
-                                    Firestore.instance.collection('users').document(currentUser.user.uid).get().then(
-                                            (value) {
-                                          Navigator.push(
-                                            context,
-                                            MaterialPageRoute(builder: (context) => HomeScreen()),
-                                          );
-                                        });
+                        Material(
+                          borderRadius: BorderRadius.circular(20.0),
+                          shadowColor: Colors.blueAccent,
+                          color: Colors.blue,
+                          elevation: 7.0,
+                          child: InkWell(
+                            onTap: () {
+                              if (_loginFormKey.currentState.validate()) {
+                                FirebaseAuth.instance
+                                    .signInWithEmailAndPassword(
+                                    email: emailInputController.text,
+                                    password: passwordInputController.text)
+                                    .then((currentUser) {
+                                  print(currentUser);
+                                  Firestore.instance
+                                      .collection('users')
+                                      .document(currentUser.user.uid)
+                                      .get()
+                                      .then((value) {
+                                    Navigator.push(
+                                      context,
+                                      MaterialPageRoute(
+                                          builder: (context) => HomeScreen()),
+                                    );
+                                  });
+                                }).catchError((e) {
+                                  print(e.toString());
+                                  if (e.code == 'ERROR_TOO_MANY_REQUESTS') {
+                                    setState(() {
+                                      errorText =
+                                      'Too many login attempts. Please try again later';
+                                    });
+                                  } else {
+                                    setState(() {
+                                      errorText =
+                                      'Username or Password is Incorrect';
+                                    });
                                   }
-                              );
-                            }
-                          },
-                          child: Container(
-                            height: 50.0,
-                            child: Material(
-                              borderRadius: BorderRadius.circular(20.0),
-                              shadowColor: Colors.blueAccent,
-                              color: Colors.blue,
-                              elevation: 7.0,
+                                });
+                              }
+                            },
+                            child: Container(
+                              height: 50.0,
                               child: Center(
                                 child: Text(
                                   'LOGIN',
@@ -132,9 +165,10 @@ class _LoginScreenState extends State<LoginScreen> {
                             ),
                           ),
                         ),
+                        SizedBox(height: 20.0,),
                       ],
                     ),
-                  )),
+                  ),),
             ],
           ),
         ),

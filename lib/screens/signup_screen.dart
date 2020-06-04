@@ -119,13 +119,18 @@ class _SignupScreenState extends State<SignupScreen> {
                         validator: passwordValidator,
                       ),
                       SizedBox(height: 50.0),
-                      GestureDetector(
+                      Material(
+                        borderRadius: BorderRadius.circular(20.0),
+                        shadowColor: Colors.greenAccent,
+                        color: Colors.green,
+                        elevation: 7.0,
+                        child: InkWell(
                           onTap: () {
                             if (_signUpFormKey.currentState.validate()) {
                               FirebaseAuth.instance
                                   .createUserWithEmailAndPassword(
-                                      email: emailInputController.text,
-                                      password: passwordInputController.text)
+                                  email: emailInputController.text,
+                                  password: passwordInputController.text)
                                   .then((currentUser) async {
                                 User createdUser = new User(
                                   name: nameInputController.text,
@@ -150,22 +155,18 @@ class _SignupScreenState extends State<SignupScreen> {
                           },
                           child: Container(
                             height: 50.0,
-                            child: Material(
-                              borderRadius: BorderRadius.circular(20.0),
-                              shadowColor: Colors.greenAccent,
-                              color: Colors.green,
-                              elevation: 7.0,
-                              child: Center(
-                                child: Text(
-                                  'SIGNUP',
-                                  style: TextStyle(
-                                      color: Colors.white,
-                                      fontWeight: FontWeight.bold,
-                                      fontFamily: 'Montserrat'),
-                                ),
+                            child: Center(
+                              child: Text(
+                                'SIGNUP',
+                                style: TextStyle(
+                                    color: Colors.white,
+                                    fontWeight: FontWeight.bold,
+                                    fontFamily: 'Montserrat'),
                               ),
                             ),
-                          )),
+                          ),
+                        ),
+                      ),
                       SizedBox(height: 20.0),
                     ],
                   ),
