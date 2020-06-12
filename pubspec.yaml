@@ -32,6 +32,7 @@ dependencies:
   http: ^0.12.1
   flutter_svg: ^0.17.4
   numberpicker: ^1.2.0
+  fl_chart: ^0.10.0
 
 dev_dependencies:
   flutter_test:

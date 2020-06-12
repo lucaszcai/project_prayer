@@ -1,9 +1,6 @@
 import 'package:flutter/material.dart';
-import 'package:adopt_a_street/screens/add_marker_screen.dart';
 import 'package:adopt_a_street/screens/entry_screen.dart';
-import 'package:adopt_a_street/screens/home_screen.dart';
-import 'package:adopt_a_street/screens/login_screen.dart';
-import 'package:adopt_a_street/screens/map_page.dart';
+import 'package:adopt_a_street/screens/root_screen.dart';
 
 void main() {
   WidgetsFlutterBinding.ensureInitialized();
@@ -24,7 +21,7 @@ class MyApp extends StatelessWidget {
       theme: ThemeData(
         primarySwatch: Colors.blue,
       ),
-      home: EntryScreen(),
+      home: RootScreen(),
     );
   }
 }

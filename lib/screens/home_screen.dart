@@ -1,8 +1,6 @@
 import 'package:curved_navigation_bar/curved_navigation_bar.dart';
 import 'package:flutter/material.dart';
-import 'package:adopt_a_street/screens/entry_screen.dart';
 import 'package:adopt_a_street/screens/map_page.dart';
-import 'package:adopt_a_street/screens/profile_screen.dart';
 import 'package:adopt_a_street/screens/statistics_screen.dart';
 
 class HomeScreen extends StatefulWidget {

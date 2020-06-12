@@ -3,7 +3,6 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:adopt_a_street/screens/home_screen.dart';
 import 'package:adopt_a_street/models/User.dart';
-import 'package:adopt_a_street/screens/map_page.dart';
 
 class SignupScreen extends StatefulWidget {
   @override
