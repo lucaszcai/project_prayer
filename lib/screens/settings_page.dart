@@ -1,4 +1,5 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:numberpicker/numberpicker.dart';
@@ -91,29 +92,25 @@ class _SettingsPageState extends State<SettingsPage> {
                   alignment: Alignment.centerRight,
                   child: GestureDetector(
                     onTap: () async {
-                      double receivedTime = await showDialog(
+                      int receivedTime = await showDialog(
                           context: context,
                           builder: (BuildContext context) {
-                            return NumberPickerDialog.decimal(
-                              minValue: 0,
-                              maxValue: 60,
-                              initialDoubleValue: currentUser.liveMinutes +
-                                  currentUser.liveSeconds / 10,
-                              title: Text('Choose a new time'),
-                            );
+                            return NumberPickerDialog.integer(
+                                minValue: 0,
+                                maxValue: 60,
+                                initialIntegerValue: currentUser.liveMinutes,
+                                title: Text('Choose a new time'),
+                                decoration: BoxDecoration());
                           });
                       if (receivedTime != null) {
-                        int updatedMinutes = receivedTime.floor();
-                        int updatedSeconds =
-                            ((receivedTime - receivedTime.floor()) * 10)
-                                .round();
+                        int updatedMinutes = receivedTime;
+                        int updatedSeconds = 0;
                         updateCurrentUserTime(updatedMinutes, updatedSeconds);
                       }
                       print('Received: ' + receivedTime.toString());
                     },
-                    child: Text(currentUser.liveMinutes.toString() +
-                        ":0" +
-                        currentUser.liveSeconds.toString()),
+                    child:
+                        Text(currentUser.liveMinutes.toString() + ' minutes'),
                   ),
                 ),
               ),
@@ -122,8 +119,7 @@ class _SettingsPageState extends State<SettingsPage> {
               title: Text('Log Out'),
               onTap: () {
                 FirebaseAuth.instance.signOut();
-                Navigator.of(context).pushNamedAndRemoveUntil(
-                    '/login', (Route<dynamic> route) => false);
+                Navigator.of(context).popAndPushNamed('/login');
               },
             )
           ],

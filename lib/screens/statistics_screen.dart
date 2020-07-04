@@ -3,7 +3,6 @@ import 'dart:math';
 
 import 'package:adopt_a_street/helpers/graph_helper.dart';
 import 'package:fl_chart/fl_chart.dart';
-import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:http/http.dart' as http;
@@ -14,6 +13,7 @@ class StatisticsScreen extends StatefulWidget {
 }
 
 class _StatisticsScreenState extends State<StatisticsScreen> {
+  List<Case> allCases;
   List<Case> provinceCases;
   List<String> provinces;
   String selectedProvince;
@@ -24,6 +24,7 @@ class _StatisticsScreenState extends State<StatisticsScreen> {
   @override
   void initState() {
     super.initState();
+    allCases = new List<Case>();
     provinceCases = new List<Case>();
     provinces = new List<String>();
     statsList = new List<GraphStats>();
@@ -43,43 +44,45 @@ class _StatisticsScreenState extends State<StatisticsScreen> {
 
   @override
   Widget build(BuildContext context) {
-    if (provinceCases.length == 0) {
+    if (allCases.length == 0) {
       return Scaffold(
         body: CircularProgressIndicator(),
       );
     } else {
-      provinceCases.sort((a, b) => b.cases.compareTo(a.cases));
       return Scaffold(
-        body: Column(
-          children: <Widget>[
-            SizedBox(
-              height: MediaQuery.of(context).size.height / 20,
-            ),
-            Text(
-              'Current Statistics',
-              textAlign: TextAlign.center,
-              style: TextStyle(fontSize: 20),
-            ),
-            SizedBox(
-              height: MediaQuery.of(context).size.height / 60,
-            ),
-            DropdownButton(
-              items: loadDropdownItems(),
-              value: selectedProvince,
-              onChanged: (newProvince) {
-                if (newProvince != 'All') {
-                  getProvinceHistory();
-                }
-                setState(() {
-                  selectedProvince = newProvince;
-                });
-              },
-            ),
-            SizedBox(
-              height: MediaQuery.of(context).size.height / 70,
-            ),
-            showStatistics(),
-          ],
+        body: Container(
+          width: MediaQuery.of(context).size.width,
+          child: Column(
+            children: <Widget>[
+              SizedBox(
+                height: MediaQuery.of(context).size.height / 20,
+              ),
+              Text(
+                'Current Statistics',
+                textAlign: TextAlign.center,
+                style: TextStyle(fontSize: 20),
+              ),
+              SizedBox(
+                height: MediaQuery.of(context).size.height / 60,
+              ),
+              DropdownButton(
+                items: loadDropdownItems(),
+                value: selectedProvince,
+                onChanged: (newProvince) {
+                  if (newProvince != 'All') {
+                    getProvinceHistoryUpdated(newProvince);
+                  }
+                  setState(() {
+                    selectedProvince = newProvince;
+                  });
+                },
+              ),
+              SizedBox(
+                height: MediaQuery.of(context).size.height / 70,
+              ),
+              showStatistics(),
+            ],
+          ),
         ),
       );
     }
@@ -88,21 +91,54 @@ class _StatisticsScreenState extends State<StatisticsScreen> {
   getPlacemark() async {
     List<Placemark> list =
         await Geolocator().placemarkFromCoordinates(56.13, -106.35);
-    print(list[0].administrativeArea);
   }
 
   fillCases() async {
-    print('start');
+    Map<String, int> currentProvinceCases = new Map<String, int>();
     var value = await http.get(
-        "https://api.apify.com/v2/key-value-stores/fabbocwKrtxSDf96h/records/LATEST?disableRedirect=true");
-    var allData = json.decode(value.body)['infectedByRegion'];
-    print("LENGTH: " + allData.length.toString());
-    for (int i = 1; i < allData.length - 1; i++) {
-      Case current = new Case(
-          allData[i]['region'], int.parse(allData[i]['infectedCount']));
-      provinces.add(allData[i]['region']);
-      provinceCases.add(current);
+        "https://api.covid19api.com/country/Canada/status/confirmed");
+    var allData = json.decode(value.body);
+    for (int i = 0; i < allData.length - 1; i++) {
+      Case currentCase;
+      if (allData[i]['Province'] == null || allData[i]['Province'] == '') {
+        currentCase = new Case('All', allData[i]['Cases'], date: DateTime.parse(allData[i]['Date']));
+        currentProvinceCases['All'] = allData[i]['Cases'];
+      } else {
+        if (allData[i]['Province'] == 'Grand Princess') {
+          continue;
+        }
+        currentCase = new Case(allData[i]['Province'], allData[i]['Cases'], date: DateTime.parse(allData[i]['Date']));
+        currentProvinceCases[allData[i]['Province']] = allData[i]['Cases'];
+      }
+      allCases.add(currentCase);
     }
+    provinces = currentProvinceCases.keys.toList();
+    provinces.sort();
+    for (int i = 0; i < provinces.length; i++) {
+      provinceCases
+          .add(new Case(provinces[i], currentProvinceCases[provinces[i]]));
+    }
+    allCases.sort((Case caseA, Case caseB) {
+      if (caseA.province == caseB.province) {
+        if (caseA.date == caseB.date) {
+          return caseA.cases.compareTo(caseB.cases);
+        }
+        else {
+          return caseA.date.compareTo(caseB.date);
+        }
+      }
+      else {
+        return caseA.province.compareTo(caseB.province);
+      }
+    });
+    provinceCases.sort((Case caseA, Case caseB){
+      if (caseA.cases == caseB.cases) {
+        return caseA.province.compareTo(caseB.province);
+      }
+      else {
+        return caseB.cases.compareTo(caseA.cases);
+      }
+    });
     setState(() {});
   }
 
@@ -119,6 +155,12 @@ class _StatisticsScreenState extends State<StatisticsScreen> {
                     subtitle: Text(
                         'Infected: ${provinceCases[index].cases.toString()}'),
                     leading: Text('#${index + 1}'),
+                    onTap: () {
+                      setState(() {
+                        getProvinceHistoryUpdated(provinceCases[index].province);
+                        selectedProvince = provinceCases[index].province;
+                      });
+                    },
                   ),
                   Divider()
                 ],
@@ -129,6 +171,9 @@ class _StatisticsScreenState extends State<StatisticsScreen> {
       if (statsList.length == 0) {
         return CircularProgressIndicator();
       }
+      statsList.sort((GraphStats graphStatsA, GraphStats graphStatsB) {
+        return graphStatsA.dateInt.compareTo(graphStatsB.dateInt);
+      });
       List<FlSpot> graphPoints = new List<FlSpot>();
       for (int i = 0; i < statsList.length; i++) {
         GraphStats stat = statsList[i];
@@ -137,46 +182,21 @@ class _StatisticsScreenState extends State<StatisticsScreen> {
       }
       return Container(
           width: MediaQuery.of(context).size.width,
-          padding: EdgeInsets.all(12.0),
+          padding: EdgeInsets.fromLTRB(18.0, 0, 26.0, 0),
           child: createLineGraph(graphPoints));
     }
   }
 
-  getProvinceHistory() async {
+  getProvinceHistoryUpdated(String givenProvince) {
     statsList.clear();
-    setState(() {});
     int holdMaxInfectedCount = 0;
-    print('got');
-    var jsonData = await http.get(
-        'https://api.apify.com/v2/datasets/ji95MgtBVgGJF7XcP/items',
-        headers: {'format': 'json', 'clean': '1'});
-    print('got');
-    var allData = json.decode(jsonData.body);
-    for (int i = 0; i < allData.length; i++) {
-      List provinceData = allData[i]['infectedByRegion'];
-      if (provinceData != null) {
-        for (int j = 0; j < provinceData.length; j++) {
-          if (provinceData[j]['region'] == selectedProvince) {
-            print(provinceData[j]);
-            if (provinceData[j]['infectedCount'] != '') {
-              String infectedCount = provinceData[j]['infectedCount'];
-              String lastUpdated = allData[i]['lastUpdatedAtApify'];
-
-              infectedCount = trim(infectedCount);
-              lastUpdated = trim(lastUpdated);
-
-              int caseCount = int.parse(infectedCount);
-              DateTime putDate = DateTime.parse(lastUpdated);
-              int intDate = graphHelper.dateToInt(putDate);
-
-              holdMaxInfectedCount = max(holdMaxInfectedCount, caseCount);
-
-              statsList.add(
-                  new GraphStats(infectedCount: caseCount, dateInt: intDate));
-            }
-            break;
-          }
-        }
+    for (int i = 0; i < allCases.length; i++) {
+      if (allCases[i].province != givenProvince) {
+        continue;
+      }
+      else {
+        holdMaxInfectedCount = max(holdMaxInfectedCount, allCases[i].cases);
+        statsList.add(new GraphStats(infectedCount: allCases[i].cases, dateInt: graphHelper.dateToInt(allCases[i].date)));
       }
     }
     setState(() {
@@ -199,7 +219,7 @@ class _StatisticsScreenState extends State<StatisticsScreen> {
     return LineChart(
       LineChartData(
         maxY: maxInfectedCount + maxInfectedCount / 5,
-        minX: 75,
+        minX: 0,
         lineBarsData: [
           LineChartBarData(
             spots: graphPoints,
@@ -233,13 +253,18 @@ class _StatisticsScreenState extends State<StatisticsScreen> {
               tooltipRoundedRadius: 8.0,
               tooltipBgColor: Colors.grey[200],
               getTooltipItems: (List<LineBarSpot> spots) {
-                print('length: ' + spots.length.toString());
                 List<LineTooltipItem> returnItems = new List<LineTooltipItem>();
                 for (int i = 0; i < spots.length; i++) {
-                      returnItems.add(LineTooltipItem( //TODO edit next few lines?
-                      graphHelper.doubleToDate(spots[i].bar.spots[spots[i].spotIndex].x) +
+                  returnItems.add(LineTooltipItem(
+                      //TODO edit next few lines?
+                      graphHelper.doubleToDate(
+                              spots[i].bar.spots[spots[i].spotIndex].x) +
                           ': ' +
-                      spots[i].bar.spots[spots[i].spotIndex].y.toStringAsFixed(0),
+                          spots[i]
+                              .bar
+                              .spots[spots[i].spotIndex]
+                              .y
+                              .toStringAsFixed(0),
                       TextStyle(
                         fontSize: 14.0,
                         color: Colors.blue,
@@ -256,8 +281,9 @@ class _StatisticsScreenState extends State<StatisticsScreen> {
 class Case {
   String province;
   int cases;
+  DateTime date;
 
-  Case(this.province, this.cases);
+  Case(this.province, this.cases, {this.date});
 }
 
 class GraphStats {

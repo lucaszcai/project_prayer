@@ -55,13 +55,19 @@ class _MapPageState extends State<MapPage> {
 
   getUser() async {
     FirebaseUser getUser = await FirebaseAuth.instance.currentUser();
+    DocumentSnapshot userData = await Firestore.instance.collection('users').document(getUser.uid).get();
+    setState(() {
+      currentUser = User.fromSnapshot(userData);
+    });
+
     Firestore.instance
         .collection('users')
         .document(getUser.uid)
-        .snapshots().listen((event) {
-          print(event.data);
+        .snapshots()
+        .listen((event) {
+      print(event.data);
       if (this.mounted) {
-        print('update: '+ event.data.toString());
+        print('update: ' + event.data.toString());
         setState(() {
           currentUser = User.fromSnapshot(event);
           liveMarkerID = currentUser.liveMarkerID;
@@ -158,8 +164,7 @@ class _MapPageState extends State<MapPage> {
             if (currentUser.showLive) {
               updateUserLiveMarkerCoordinates(
                   currentLocation.latitude, currentLocation.longitude);
-            }
-            else {
+            } else {
               for (int i = 0; i < markers.length; i++) {
                 if (markers[i].markerId.value == currentUser.uid + 'LIVE') {
                   markers.removeAt(i);
@@ -170,7 +175,8 @@ class _MapPageState extends State<MapPage> {
                 setState(() {
                   markers.add(new Marker(
                     markerId: MarkerId(currentUser.uid + 'LIVE'),
-                    position: LatLng(currentLocation.latitude, currentLocation.longitude),
+                    position: LatLng(
+                        currentLocation.latitude, currentLocation.longitude),
                     icon: liveMarkerIcon,
                   ));
                 });
@@ -209,6 +215,8 @@ class _MapPageState extends State<MapPage> {
         Prayer currentPrayer = Prayer.fromSnapshot(ds);
         double hue = 0;
         double percent = currentPrayer.total / currentPrayer.goal; //CHANGE
+        print('Name: ' + currentPrayer.placeName);
+        print('Percent: ' + percent.toString());
         if (percent < 0.33) {
           hue = BitmapDescriptor.hueRed;
         } else if (percent < 0.67) {
@@ -310,7 +318,7 @@ class _MapPageState extends State<MapPage> {
                         style: TextStyle(
                             fontWeight: FontWeight.bold, fontSize: 40),
                         onChanged: (value) {
-                          if (value == '') {
+                          if (value == null || value == '') {
                             placeNameInputController.clear();
                           }
                         },
@@ -326,6 +334,11 @@ class _MapPageState extends State<MapPage> {
                         decoration: InputDecoration(hintText: 'City, Province'),
                         style: TextStyle(
                             fontWeight: FontWeight.w400, fontSize: 20),
+                        onChanged: (String value) {
+                          if (value == null || value == '') {
+                            cityInputController.clear();
+                          }
+                        },
                       ),
                     ),
                     SizedBox(
@@ -508,7 +521,7 @@ class _MapPageState extends State<MapPage> {
                     GestureDetector(
                       onTap: liveMarkerID != currentPrayer.reference.documentID
                           ? () {
-                        stop();
+                              stop();
                               Navigator.pop(context, true);
                               currentPrayer.notes.insert(
                                   0,
@@ -517,6 +530,7 @@ class _MapPageState extends State<MapPage> {
                                       addNoteController.text);
                               currentPrayer.noteTimes.insert(
                                   0, Timestamp.fromDate(DateTime.now()));
+                              currentPrayer.total++;
                               updatePrayer(currentPrayer);
                               if (currentUser.showLive) {
                                 LiveMarker newLiveMarker = LiveMarker(
@@ -532,14 +546,15 @@ class _MapPageState extends State<MapPage> {
                                     .document(currentUser.uid)
                                     .updateData({
                                   'live': true,
-                                  'liveMarkerID': currentPrayer.reference.documentID,
+                                  'liveMarkerID':
+                                      currentPrayer.reference.documentID,
                                 });
                                 start();
-                              }
-                              else {
+                              } else {
                                 currentUser.reference.updateData({
                                   'live': true,
-                                  'liveMarkerID': currentPrayer.reference.documentID,
+                                  'liveMarkerID':
+                                      currentPrayer.reference.documentID,
                                 });
                                 start();
                               }
